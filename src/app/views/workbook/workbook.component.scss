@@ -1,0 +1,50 @@
+.workbook- {
+
+  &text {
+    .bold {
+      font-weight: bold;
+    }
+  }
+
+  &answer, &question {
+    height: 50vh;
+  }
+
+  &answer {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  &playing {
+    box-sizing: border-box;
+    padding: 8px;
+  }
+
+  &answer-card {
+    box-sizing: border-box;
+    height: 50%;
+    border-radius: 0;
+    width: 50%;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-collapse: collapse;
+  }
+
+  // &question-content {
+  //   height: 100%;
+  //   box-sizing: border-box;
+  // }
+}
+
+.answered .workbook-answer-card,
+.mistake .workbook-question {
+  background: tomato;
+}
+
+.correct .workbook-question,
+.correct-0 .workbook-answer-0,
+.correct-1 .workbook-answer-1,
+.correct-2 .workbook-answer-2,
+.correct-3 .workbook-answer-3 {
+  background: greenyellow;
+}
