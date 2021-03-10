@@ -1,0 +1,27 @@
+<section class="workbook-list-section" *ngFor="let category of listDataSession.categories">
+  <h1 class="workbook-list-category">{{ category }}</h1>
+  <div class="workbook-list-links">
+    <div mlRipple class="workbook-list-link" *ngFor="let data of listDataSession.value[category]" (pointerup)="gotoGame($event, data)">
+      <div class="workbook-list-link-left-content" [style.background-color]="data.theme">
+        <h2 class="workbook-list-short-title">{{ data.shortTitle }}</h2>
+      </div>
+      <div class="workbook-list-link-right-content">
+        <span>{{ data.title }}</span>
+        <!-- <span>{{ data.gameType }}</span> -->
+      </div>
+    </div>
+    <div class="workbook-list-empty-link"></div>
+    <div class="workbook-list-empty-link"></div>
+  </div>
+</section>
+
+<app-not-matched *ngIf="listDataSession.notMatched"></app-not-matched>
+
+<ng-template #rootHeaderContent>
+  <div class="root-header-content">
+    <input (change)="onEntrySearchBar($event)" />
+    <div class="root-header-content-right root-header-content-not-transparent">
+      <!-- <button mlButton (click)="test()">Add "Searching" fragment</button> -->
+    </div>
+  </div>
+</ng-template>

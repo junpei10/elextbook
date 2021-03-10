@@ -1,0 +1,43 @@
+<ng-template [ngIf]="display === 'ready'">
+  <section class="workbook-section">
+    Ready
+    <button mlButton (click)="play()">Play</button>
+  </section>
+</ng-template>
+
+
+<ng-template [ngIf]="display === 'playing'">
+  <section class="workbook-playing-section" [class]="playingDisplayClass">
+    <div class="workbook-playing-title-container">
+      <div class="workbook-playing-content" [innerHTML]="currentQuestion.title"></div>
+    </div>
+
+    <div class="workbook-playing-answer-container">
+      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-0" (click)="onClickAnswerButton(0)">
+        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[0]"></div>
+      </div>
+
+      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-1" (click)="onClickAnswerButton(1)">
+        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[1]"></div>
+      </div>
+
+      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-2" (click)="onClickAnswerButton(2)">
+        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[2]"></div>
+      </div>
+
+      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-3" (click)="onClickAnswerButton(3)">
+        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[3]"></div>
+      </div>
+    </div>
+  </section>
+</ng-template>
+
+
+<ng-template [ngIf]="display === 'result'">
+  <section class="workbook-section">
+    Result {{ counter.correctCount }} {{ counter.mistakeCount }}
+    <button mlButton (click)="display = 'ready'">Change config</button>
+    <button mlButton (click)="play()">Replay</button>
+    <button [mlButton]="counter.mistakeCount !== 0" (click)="replayOnlyMistakes()">Replay only the mistake</button>
+  </section>
+</ng-template>

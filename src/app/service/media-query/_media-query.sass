@@ -1,0 +1,27 @@
+=max-width-bp($bp)
+  $bp: $bp - 1
+  @media screen and (max-width: $bp)
+    @content
+
+=min-width-bp($before-bp, $after-bp: 0)
+  @if $after-bp == 0
+    $before-bp: $before-bp + 1
+    @media screen and (min-width: $before-bp)
+      @content
+  @else if $before-bp == 0
+    @media screen and (min-width: $before-bp) and (max-width: $after-bp)
+      @content
+  @else
+    $before-bp: $before-bp + 1
+    @media screen and (min-width: $before-bp) and (max-width: $after-bp)
+      @content
+
+$breakpoint: 1024px
+
+=pc
+  +min-width-bp($breakpoint)
+    @content
+
+=mp
+  +min-width-bp(0, $breakpoint)
+    @content

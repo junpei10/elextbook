@@ -1,1 +1,44 @@
-<router-outlet></router-outlet>
+<header id="root-header-pane" [class]="rootHeaderStyling.paneClass">
+  <section class="root-header-wrapper">
+    <div class="root-header-contents">
+      <button
+        mlButton
+        hoverAction="enable"
+        (click)="rootHeaderEvents.commonButtonClickEvent()"
+        [class]="'root-header-common-button root-header-common-button-' + rootHeaderStyling.commonButtonType"
+        variant="icon"
+      >
+        B
+      </button>
+      <ng-template
+        [mlPortalOutlet]="rootHeaderElement.content || defaultRouteHeaderContent"
+        [mlPortalAttachConfig]="rootHeaderElement.contentPortalConfig"
+      ></ng-template>
+      <div *ngIf="mediaQuery.store.getState() === 'mp'" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
+    </div>
+
+    <div class="root-header-predictive-candidates">
+      <!-- <div *ngFor="let candidate of rootHeader.predictiveCandidates"></div> -->
+    </div>
+
+    <ng-template #defaultRouteHeaderContent>
+      <div class="root-header-content">
+        <h3>Elextbook</h3>
+      </div>
+    </ng-template>
+  </section>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<aside *ngIf="rootDrawer.isExisted" [class]="rootDrawer.paneClass">
+  <section class="root-drawer-content">
+    <button mlButton>ボタン</button>
+  </section>
+</aside>
+
+<!-- <footer class="route-footer-pane">
+  <div></div>
+</footer> -->

@@ -123,6 +123,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "elextbook"
+    }
+  },
+  "defaultProject": "elextbook",
+  "cli": {
+    "analytics": false
+  }
 }

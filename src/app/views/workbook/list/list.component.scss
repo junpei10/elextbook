@@ -1,0 +1,73 @@
+@import '../../../service/media-query/media-query';
+
+.workbook-list {
+  &-section {
+    margin: 32px 0;
+  }
+
+  &-category {
+    font-size: 16px;
+    margin: 0 8px 8px;
+  }
+
+  &-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+  }
+
+  &-link {
+    display: flex;
+
+    margin: 0 16px;
+    height: 96px;
+    border-bottom: solid 1px black;
+
+    @include max-width-bp(944px) {
+      width: 100%;
+      margin: 0px;
+    }
+
+    &-left-content {
+      display: flex;
+      height: 100%;
+      min-width: 96px;
+      max-width: 96px;
+      color: white;
+    }
+
+    &-right-content {
+      height: 100%;
+      width: 344px;
+      padding: 8px;
+      box-sizing: border-box;
+
+      @include max-width-bp(944px) {
+        width: 100%;
+      }
+    }
+  }
+
+  &-empty-link {
+    width: 472px;
+    @include max-width-bp(944px) {
+      width: 100%;
+    }
+  }
+
+  &-short-title {
+    margin: auto;
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  // &-link {
+  //   height: 100%;
+  //   width: 80px;
+  // }
+
+  // &-link-short-title {
+  //   margin: auto;
+  // }
+}
