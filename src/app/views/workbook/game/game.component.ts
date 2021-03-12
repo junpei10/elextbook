@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, Inject, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { Firestore, FIRESTORE } from 'src/app/service/firestore';
+import { RunOutsideNgZone, RUN_NG_ZONE, RUN_OUTSIDE_NG_ZONE } from 'src/app/utils';
 import { WorkbookData, WORKBOOK_CURRENT_DATA } from '../workbook';
 
 type GameConfig = GameConfigForDefault | GameConfigForDenko;
@@ -115,7 +116,9 @@ export class WorkbookGameComponent implements OnDestroy {
   playBuzzer: PlayBuzzer;
 
   constructor(
-    @Inject(FIRESTORE) firestore: Firestore
+    @Inject(FIRESTORE) firestore: Firestore,
+    @Inject(RUN_OUTSIDE_NG_ZONE) runOutsideNgZone: RunOutsideNgZone,
+    changeDetectorRef: ChangeDetectorRef
   ) {
     const currentData = WORKBOOK_CURRENT_DATA.current;
 
@@ -139,20 +142,24 @@ export class WorkbookGameComponent implements OnDestroy {
       dataGetter = firestore.collection('workbook-data').doc(path);
     }
 
-    Promise.all([
-      dataGetter.get(),
-      firestore.collection('workbook-quizzes').doc(path).get()
-    ]).then(result => {
-      // this.quiz = result[1].data().quiz;
+    runOutsideNgZone(() => {
+      Promise.all([
+        dataGetter.get(),
+        firestore.collection('workbook-quizzes').doc(path).get()
+      ]).then(result => {
+        // this.quiz = result[1].data().quiz;
 
-      // すでに取得しているデータがあるということは "result[0] = null" であることが確定する。
-      const data = this.data || result[0].data() as WorkbookData;
+        // すでに取得しているデータがあるということは "result[0] = null" であることが確定する。
+        const data = this.data || result[0].data() as WorkbookData;
 
-      this.questionOrderIndexesFactory = data.gameType === 'denko'
-        ? createOrderIndexesForDenko
-        : createOrderIndexesForDefault;
+        this.questionOrderIndexesFactory = data.gameType === 'denko'
+          ? createOrderIndexesForDenko
+          : createOrderIndexesForDefault;
 
-      this.hasLoaded = false;
+        this.hasLoaded = false;
+
+        changeDetectorRef.markForCheck();
+      });
     });
   }
 

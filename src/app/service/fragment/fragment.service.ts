@@ -13,14 +13,14 @@ interface ObserveConfig {
   providedIn: 'root'
 })
 export class Fragment {
-  fragmentObservable: ActivatedRoute['fragment'];
-
-  private _navigate: Router['navigate'];
+  readonly fragmentObservable: ActivatedRoute['fragment'];
 
   get value(): string {
     // @ts-ignore
     return this.fragmentObservable._value;
   }
+
+  private _navigate: Router['navigate'];
 
   constructor(
     _router: Router,
@@ -34,31 +34,27 @@ export class Fragment {
     this._navigate([], { fragment: name });
   }
 
+  remove(): void {
+    if (this.value) {
+      history.back();
+    }
+  }
+
   observe(name: string, config: ObserveConfig = {}): Subscription {
     let isMatching: boolean;
     const observable = config.observable || this.fragmentObservable;
     const subscription = observable
-      .subscribe((currentFragment) => {
-        // currentFragment = currentFragment || null; // currentFragmentがundefinedだった場合、nullに変換する(統一させる)
-        if (currentFragment === name) {
+      .subscribe((currFragName) => {
+        if (currFragName === name) {
           config.onMatch?.();
           isMatching = true;
+
         } else if (isMatching) {
           config.onEndMatching?.();
           isMatching = false;
         }
-        // } else if (this._previousFragment === currentFragment) {
-        //   config.elseEvent?.();
-        //   if (config.autoUnsubscribe) {
-        //     subscription.unsubscribe();
-        //   }
-
-        // } else {
-        //   this._previousFragment = currentFragment;
-        // }
       });
 
     return subscription;
   }
-
 }
