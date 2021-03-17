@@ -6,8 +6,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 import { MlButtonModule } from '@material-lite/angular/button';
-import { MlPortalModule } from './portal';
 import { MlRippleModule } from '@material-lite/angular/core';
+import { MlPortalModule } from '@material-lite/angular-cdk/portal';
+import { MlStraightTrackerModule } from '@material-lite/angular-cdk/straight-tracker';
 import { HomeComponent } from './views/home/home.component';
 
 @NgModule({
@@ -21,7 +22,8 @@ import { HomeComponent } from './views/home/home.component';
     AppRoutingModule,
     MlRippleModule,
     MlButtonModule,
-    MlPortalModule
+    MlPortalModule,
+    MlStraightTrackerModule
   ],
   providers: [],
   bootstrap: [AppComponent]

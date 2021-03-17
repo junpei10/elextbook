@@ -46,6 +46,8 @@ export class AppComponent implements OnInit, DoCheck {
   title = 'elextbook';
   doCheckCount: number = 0;
 
+  footerTabSelectedIndex: number;
+
   constructor(
     public mediaQuery: MediaQueryObserver,
     public rootHeaderStyling: RootHeaderStyling,

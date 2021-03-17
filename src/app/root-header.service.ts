@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { ApplicationInitStatus, Inject, Injectable, TemplateRef } from '@angular/core';
-import { MlPortalConfig } from '@material-lite/angular-cdk/portal';
+import { MlPortalAttachConfig } from '@material-lite/angular-cdk/portal';
 import { noop, Subscription } from 'rxjs';
 import { rootChangeDetector } from './root-change-detector-ref';
 import { Fragment } from './service/fragment';
@@ -133,7 +133,7 @@ export class RootHeaderEvents {
 })
 export class RootHeaderElement {
   content: TemplateRef<Element>;
-  readonly contentPortalConfig: MlPortalConfig = {
+  readonly contentPortalConfig: MlPortalAttachConfig = {
     animation: {
       enter: 280,
       leave: 280,
@@ -142,7 +142,7 @@ export class RootHeaderElement {
   };
 
   predictiveCandidates: TemplateRef<Element>;
-  readonly predictiveCandidatesPortalConfig: MlPortalConfig = {
+  readonly predictiveCandidatesPortalConfig: MlPortalAttachConfig = {
     animation: {
       enter: 280,
       leave: 280,

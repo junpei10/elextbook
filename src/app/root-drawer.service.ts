@@ -31,7 +31,6 @@ export class RootDrawer {
     this.isExisted = true;
     // this.paneClass = 'root-header-drawer-pane';
     // this._rootChangeDetector.ref.markForCheck();
-
   }
 
   close(): void {

@@ -9,6 +9,8 @@ $mp-normal-header-top: ($mp-normal-header-pane-height - $mp-normal-header-height
 $mp-resting-header-height: 40px;
 $mp-resting-header-top: 0;
 
+$pc-header-height: 40px;
+
 .root-header {
   &-pane {
     pointer-events: none;
@@ -19,17 +21,19 @@ $mp-resting-header-top: 0;
     background-color: transparent;
 
     @include pc {
-      height: 40px;
+      height: $pc-header-height;
+      z-index: 4;
     }
 
     @include mp {
       height: $mp-normal-header-pane-height;
+      z-index: 8;
     }
   }
 
   &-wrapper {
     pointer-events: auto;
-
+    position: relative;
     background: white;
 
     @include pc {
@@ -40,7 +44,7 @@ $mp-resting-header-top: 0;
       will-change: height, width, top;
       transition-property: height, width, top;
       transition-duration: 400ms;
-      transition-timing-function: map-get($ml-amt-function, angular);
+      transition-timing-function: map-get($ml-animation-function, angular);
 
       width: 96%;
       height: 48px;
@@ -56,7 +60,12 @@ $mp-resting-header-top: 0;
   }
 
   &-contents {
-    height: $mp-normal-header-height;
+    @include pc {
+      height: $pc-header-height;
+    }
+    @include mp {
+      height: $mp-normal-header-height;
+    }
     position: relative;
     display: flex;
   }
@@ -82,12 +91,16 @@ $mp-resting-header-top: 0;
   }
 
   &-common-button {
-    min-width: 40px;
     margin: auto 16px;
 
     @include mp {
       position: relative;
+      min-width: 40px;
       z-index: 1;
+    }
+
+    @include pc {
+      min-width: 32px;
     }
   }
 
@@ -107,10 +120,7 @@ $mp-resting-header-top: 0;
 
   &-predictive-candidates {
     opacity: 0;
-    transition: opacity 400ms map-get($ml-amt-function, angular);
-  }
-
-  &-normal & {
+    transition: opacity 400ms map-get($ml-animation-function, angular);
   }
 
   &-searching & {
@@ -134,8 +144,70 @@ $mp-resting-header-top: 0;
       border-top: 1px solid rgba(0, 0, 0, 0.24);
     }
   }
+}
 
-  &-resting & {
+.root-main {
+  display: flex;
+
+  @include mp {
+    flex-direction: column;
+  }
+
+  @include pc {
+    min-height: calc(100vh - #{$pc-header-height});
+  }
+
+  &-nav {
+    display: flex;
+    background: white;
+
+    @include pc {
+      position: relative;
+      order: -1;
+      flex-direction: column;
+      z-index: 3;
+      @include ml-elevation(4);
+
+      .ml-button {
+        width: 64px;
+        height: 64px;
+        padding: 0;
+      }
+    }
+
+    @include mp {
+      z-index: 8;
+      @include ml-elevation(8);
+      position: fixed;
+      top: unset;
+      bottom: 0;
+      height: fit-content;
+      width: 100%;
+
+      .ml-button {
+        width: 100%;
+      }
+    }
+
+    &-ink-bar {
+      height: 2px;
+      width: 100%;
+    }
+
+    &-button-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      span {
+        display: none;
+      }
+
+      svg {
+        width: 32px;
+        height: 32px;
+      }
+    }
   }
 }
 

@@ -12,7 +12,7 @@
       </button>
       <ng-template
         [mlPortalOutlet]="rootHeaderElement.content || defaultRouteHeaderContent"
-        [mlPortalAttachConfig]="rootHeaderElement.contentPortalConfig"
+        [mlPortalOutletAttachConfig]="rootHeaderElement.contentPortalConfig"
       ></ng-template>
       <div *ngIf="mediaQuery.store.getState() === 'mp'" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
     </div>
@@ -29,8 +29,33 @@
   </section>
 </header>
 
-<main>
+<main class="root-main">
   <router-outlet></router-outlet>
+  <nav class="root-main-nav">
+    <ml-straight-tracker class="root-main-nav-straight-tracker" [targetIndex]="footerTabSelectedIndex">
+      <div class="root-footer-ink-bar"></div>
+    </ml-straight-tracker>
+    <button mlButton routerLink="/home">
+      <div class="root-main-nav-button-content">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M0 0h24v24H0z" fill="none" />
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+        <span>Home</span>
+      </div>
+    </button>
+    <button mlButton routerLink="/workbook-list" theme="primary">
+      <div class="root-main-nav-button-content">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"
+          />
+        </svg>
+        <span>Workbook</span>
+      </div>
+    </button>
+  </nav>
 </main>
 
 <aside *ngIf="rootDrawer.isExisted" [class]="rootDrawer.paneClass">
@@ -38,7 +63,3 @@
     <button mlButton>ボタン</button>
   </section>
 </aside>
-
-<!-- <footer class="route-footer-pane">
-  <div></div>
-</footer> -->
