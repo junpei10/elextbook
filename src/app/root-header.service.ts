@@ -48,7 +48,7 @@ export class RootHeaderStyling {
       this._commonButtonType = commonButton;
     }
 
-    const mqState = this._mediaQuery.store.getState();
+    const mqState = this._mediaQuery.store.state;
     this._updateStyle(mqState);
     this._changeDetector.ref.markForCheck();
   }

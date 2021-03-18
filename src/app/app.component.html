@@ -6,7 +6,7 @@
         hoverAction="enable"
         (click)="rootHeaderEvents.commonButtonClickEvent()"
         [class]="'root-header-common-button root-header-common-button-' + rootHeaderStyling.commonButtonType"
-        variant="icon"
+        [variant]="mediaQuery.store.state === 'mp' ? 'icon' : 'basic'"
       >
         B
       </button>
@@ -14,7 +14,7 @@
         [mlPortalOutlet]="rootHeaderElement.content || defaultRouteHeaderContent"
         [mlPortalOutletAttachConfig]="rootHeaderElement.contentPortalConfig"
       ></ng-template>
-      <div *ngIf="mediaQuery.store.getState() === 'mp'" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
+      <div *ngIf="mediaQuery.store.state === 'mp'" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
     </div>
 
     <div class="root-header-predictive-candidates">
@@ -32,9 +32,14 @@
 <main class="root-main">
   <router-outlet></router-outlet>
   <nav class="root-main-nav">
-    <ml-straight-tracker class="root-main-nav-straight-tracker" [targetIndex]="footerTabSelectedIndex">
-      <div class="root-footer-ink-bar"></div>
+    <ml-straight-tracker class="root-main-nav-straight-tracker"
+      [targetIndex]="footerTabSelectedIndex"
+      [position]="mediaQuery.store.state === 'mp' ? 'before' : 'after'"
+      [orientation]="mediaQuery.store.state === 'mp' ? 'horizontal' : 'vertical'"
+    >
+      <div class="root-main-nav-ink-bar ml-primary-bg"></div>
     </ml-straight-tracker>
+
     <button mlButton routerLink="/home">
       <div class="root-main-nav-button-content">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -44,7 +49,8 @@
         <span>Home</span>
       </div>
     </button>
-    <button mlButton routerLink="/workbook-list" theme="primary">
+
+    <button mlButton routerLink="/workbook-list">
       <div class="root-main-nav-button-content">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M0 0h24v24H0z" fill="none" />
