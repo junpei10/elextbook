@@ -19,6 +19,7 @@
     "@angular/platform-browser": "~11.2.5",
     "@angular/platform-browser-dynamic": "~11.2.5",
     "@angular/router": "~11.2.5",
+    "@angular/service-worker": "~11.2.5",
     "@material-lite/angular": "^1.0.0",
     "@material-lite/angular-cdk": "^1.0.0",
     "firebase": "^8.2.1",

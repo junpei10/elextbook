@@ -10,6 +10,8 @@ import { MlRippleModule } from '@material-lite/angular/core';
 import { MlPortalModule } from '@material-lite/angular-cdk/portal';
 import { MlStraightTrackerModule } from '@material-lite/angular-cdk/straight-tracker';
 import { HomeComponent } from './views/home/home.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -23,7 +25,8 @@ import { HomeComponent } from './views/home/home.component';
     MlRippleModule,
     MlButtonModule,
     MlPortalModule,
-    MlStraightTrackerModule
+    MlStraightTrackerModule,
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   providers: [],
   bootstrap: [AppComponent]
