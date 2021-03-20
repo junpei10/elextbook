@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { ActivatedRoute, ActivatedRouteSnapshot } from '@angular/router';
 import { RouteChanges, ROUTE_CHANGES } from '../route-observer';
 
-export interface FlexibleActivatedRouteSnapshot<D> extends ActivatedRouteSnapshot {
+export interface FlexibleActivatedRoute<D> extends ActivatedRouteSnapshot {
   data: D;
 }
 
@@ -10,21 +10,24 @@ export interface FlexibleActivatedRouteSnapshot<D> extends ActivatedRouteSnapsho
   providedIn: 'root'
 })
 export class YoungestRoute<D = unknown> {
-  activatedRouteRef: ActivatedRoute;
+  readonly activatedRouteRef: ActivatedRoute;
 
-  private _state: FlexibleActivatedRouteSnapshot<D>;
-  get state(): FlexibleActivatedRouteSnapshot<D> {
-    return this._state;
-  }
+  readonly state: FlexibleActivatedRoute<D>;
 
   constructor(
     _route: ActivatedRoute,
     @Inject(ROUTE_CHANGES) routeChanges: RouteChanges
   ) {
     routeChanges.subscribe(() => {
-      while (_route.firstChild) { _route = _route.firstChild; }
-      this.activatedRouteRef = _route;
-      this._state = _route.snapshot as any;
+      let route = _route;
+
+      while (route.firstChild) { route = route.firstChild; }
+
+      // @ts-ignore: assign the readonly variable
+      this.activatedRouteRef = route;
+
+      // @ts-ignore: assign the readonly variable
+      this.state = route.snapshot as any;
     });
   }
 }

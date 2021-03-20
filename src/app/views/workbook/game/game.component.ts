@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { Firestore, FIRESTORE } from 'src/app/service/firestore';
+import { Fragment } from 'src/app/service/fragment';
 import { RunOutsideNgZone, RUN_NG_ZONE, RUN_OUTSIDE_NG_ZONE } from 'src/app/utils';
 import { WorkbookData, WORKBOOK_CURRENT_DATA } from '../workbook';
 
@@ -113,9 +114,10 @@ export class WorkbookGameComponent implements OnDestroy {
 
   mistakeQuestionIndexes: number[] = [];
 
-  playBuzzer: PlayBuzzer;
+  playBuzzer: PlayBuzzer = playBuzzer;
 
   constructor(
+    public fragment: Fragment,
     @Inject(FIRESTORE) firestore: Firestore,
     @Inject(RUN_OUTSIDE_NG_ZONE) runOutsideNgZone: RunOutsideNgZone,
     changeDetectorRef: ChangeDetectorRef
@@ -160,6 +162,11 @@ export class WorkbookGameComponent implements OnDestroy {
 
         changeDetectorRef.markForCheck();
       });
+    });
+
+    fragment.observe('playing', {
+      onMatch: () => this.play(),
+      onEndMatching: () => this.finish()
     });
   }
 
@@ -229,9 +236,8 @@ export class WorkbookGameComponent implements OnDestroy {
   replayOnlyMistakes(): void {
     // 重複した値を削除する
     const mistakes = this.mistakeQuestionIndexes;
-    const orderIndexes = (this.questionOrderIndexes = mistakes.filter(
-      (val, i) => i === mistakes.indexOf(val)
-    ));
+    const orderIndexes = (this.questionOrderIndexes =
+      mistakes.filter((val, i) => i === mistakes.indexOf(val)));
 
     this.questionLength = orderIndexes.length;
 
@@ -252,6 +258,7 @@ export class WorkbookGameComponent implements OnDestroy {
     if (this.config.repeatCount >= this.repeatedCount) {
       this.repeatedCount++;
       this.play();
+
     } else {
       this.currentQuestion = null;
       this.currentAnsweredIndex = null;

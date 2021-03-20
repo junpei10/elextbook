@@ -1,10 +1,9 @@
 <ng-template [ngIf]="display === 'ready'">
   <section class="workbook-section">
     Ready
-    <button mlButton (click)="play()">Play</button>
+    <button mlButton (click)="fragment.add('playing')">Play</button>
   </section>
 </ng-template>
-
 
 <ng-template [ngIf]="display === 'playing'">
   <section class="workbook-playing-section" [class]="playingDisplayClass">
@@ -31,7 +30,6 @@
     </div>
   </section>
 </ng-template>
-
 
 <ng-template [ngIf]="display === 'result'">
   <section class="workbook-section">

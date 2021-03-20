@@ -6,15 +6,20 @@
         hoverAction="enable"
         (click)="rootHeaderEvents.commonButtonClickEvent()"
         [class]="'root-header-common-button root-header-common-button-' + rootHeaderStyling.commonButtonType"
-        [variant]="mediaQuery.store.state === 'mp' ? 'icon' : 'basic'"
+        [variant]="mediaQueryStatus.headerCommonButtonVariant"
       >
-        B
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M0 0h24v24H0z" fill="none" />
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+        </svg>
       </button>
+
       <ng-template
         [mlPortalOutlet]="rootHeaderElement.content || defaultRouteHeaderContent"
         [mlPortalOutletAttachConfig]="rootHeaderElement.contentPortalConfig"
       ></ng-template>
-      <div *ngIf="mediaQuery.store.state === 'mp'" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
+
+      <div *ngIf="mediaQueryStatus.isMp" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
     </div>
 
     <div class="root-header-predictive-candidates">
@@ -30,12 +35,16 @@
 </header>
 
 <main class="root-main">
-  <router-outlet></router-outlet>
+  <div class="root-main-component-outlet" [@routeAnimation]="routeKey">
+    <router-outlet></router-outlet>
+  </div>
+
   <nav class="root-main-nav">
-    <ml-straight-tracker class="root-main-nav-straight-tracker"
+    <ml-straight-tracker
+      class="root-main-nav-straight-tracker"
       [targetIndex]="footerTabSelectedIndex"
-      [position]="mediaQuery.store.state === 'mp' ? 'before' : 'after'"
-      [orientation]="mediaQuery.store.state === 'mp' ? 'horizontal' : 'vertical'"
+      [position]="mediaQueryStatus.mainNavTrackerPosition"
+      [orientation]="mediaQueryStatus.mainNavTrackerOrientation"
     >
       <div class="root-main-nav-ink-bar ml-primary-bg"></div>
     </ml-straight-tracker>
@@ -66,6 +75,6 @@
 
 <aside *ngIf="rootDrawer.isExisted" [class]="rootDrawer.paneClass">
   <section class="root-drawer-content">
-    <button mlButton>ボタン</button>
+    <button mlButton (click)="history.back()">ボタン</button>
   </section>
 </aside>

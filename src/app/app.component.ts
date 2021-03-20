@@ -1,9 +1,14 @@
-import { animate, query, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Inject, OnInit, ViewEncapsulation } from '@angular/core';
+import { animate, query, sequence, style, transition, trigger } from '@angular/animations';
+import {
+  ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Inject, OnInit,
+  ViewEncapsulation
+} from '@angular/core';
 import { AppMeta } from './app-meta.service';
+import { AppRouteData } from './app-routing.module';
 import { rootChangeDetector } from './root-change-detector-ref';
 import { RootDrawer } from './root-drawer.service';
 import { RootHeaderElement, RootHeaderEvents, RootHeaderStyling } from './root-header.service';
+import { Fragment } from './service/fragment';
 import { MediaQueryObserver } from './service/media-query';
 import { RouteChanges, ROUTE_CHANGES } from './service/route-observer';
 import { YoungestRoute } from './service/youngest-route';
@@ -15,30 +20,27 @@ import { YoungestRoute } from './service/youngest-route';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   animations: [
-    trigger('rootDrawerAnimation', [
-      transition('true <=> false', [
-        query(':enter', [
-          state('*', style({ transform: 'translateX(-100%)' })),
-          animate('280ms cubic-bezier(0.25, 0.8, 0.25, 1)',
-            style({
-              pointerEvents: 'none',
-              background: 'pink',
-              transform: 'translateX(0%)'
-            })
-          )
-        ]),
-        query(':leave', [
-          state('*', style({ transform: 'translateX(0%)' })),
-          animate('280ms cubic-bezier(0.25, 0.8, 0.25, 1)',
-            style({
-              pointerEvents: 'none',
-              background: 'pink',
-              transform: 'translateX(-100%)'
-            })
-          )
-        ]
-        )
-      ])
+    trigger('routeAnimation', [
+      transition('home => *, workbook-list => *, workbook-game => *',
+        sequence([
+          query(':enter', style({ position: 'absolute', pointerEvents: 'none', opacity: 0 })),
+
+          query(':leave', [
+            style({  opacity: 1 }),
+            animate('200ms cubic-bezier(0.25, 0.8, 0.25, 1)', style({ opacity: 0 })),
+          ], { optional: true }),
+
+          query(':leave',
+            animate('0.0001ms', style({ position: 'absolute', pointerEvents: 'none' })),
+            { optional: true }
+          ),
+
+          query(':enter', [
+            style({ position: 'inherit', pointerEvents: 'auto' }),
+            animate('200ms cubic-bezier(0.25, 0.8, 0.25, 1)', style({ opacity: 1 }))
+          ], { optional: true })
+        ])
+      )
     ])
   ]
 })
@@ -48,29 +50,71 @@ export class AppComponent implements OnInit, DoCheck {
 
   footerTabSelectedIndex: number = 0;
 
+  history = history;
+
+  mediaQueryStatus: {
+    isMp: boolean;
+    headerCommonButtonVariant: 'icon' | 'basic';
+    mainNavTrackerPosition: 'after' | 'before';
+    mainNavTrackerOrientation: 'vertical' | 'horizontal';
+  } = {} as any;
+
+  routeKey: string;
+
   constructor(
-    public mediaQuery: MediaQueryObserver,
+    public fragment: Fragment,
     public rootHeaderStyling: RootHeaderStyling,
     public rootHeaderEvents: RootHeaderEvents,
     public rootHeaderElement: RootHeaderElement,
     public rootDrawer: RootDrawer,
-    _changeDetector: ChangeDetectorRef,
+    changeDetector: ChangeDetectorRef,
     appMeta: AppMeta,
-    youngestRoute: YoungestRoute,
+    youngestRoute: YoungestRoute<AppRouteData>,
+    mediaQuery: MediaQueryObserver,
     @Inject(ROUTE_CHANGES) routeChanges: RouteChanges
   ) {
-    mediaQuery.observe('(min-width: 1024px)');
-    mediaQuery.store.changes.subscribe(() => _changeDetector.markForCheck());
-
     appMeta.commonTitle = 'Elextbook';
     appMeta.titleDivider = ' | ';
 
-    routeChanges.subscribe(() => {
-      appMeta.updateMeta(youngestRoute.state.data);
-      // rootDrawer.close();
+    mediaQuery.observe('(min-width: 1024px)');
+    mediaQuery.store.changes.subscribe((value) => {
+      if (value === 'mp') {
+        this.mediaQueryStatus = {
+          isMp: true,
+          headerCommonButtonVariant: 'icon',
+          mainNavTrackerPosition: 'before',
+          mainNavTrackerOrientation: 'horizontal'
+        };
+      } else {
+
+        this.mediaQueryStatus = {
+          isMp: false,
+          headerCommonButtonVariant: 'basic',
+          mainNavTrackerPosition: 'after',
+          mainNavTrackerOrientation: 'vertical'
+        };
+      }
+
+      changeDetector.markForCheck();
     });
 
-    rootChangeDetector.ref = _changeDetector;
+    routeChanges.subscribe(() => {
+      const data = youngestRoute.state.data;
+
+      appMeta.updateMeta(data);
+      const routeKey = this.routeKey =
+        data.parentKeys[0] || data.key;
+
+      this.footerTabSelectedIndex = routeKey === 'home'
+        ? 0
+        : routeKey === 'workbook-list' || routeKey === 'workbook-game'
+          ? 1
+          : 0;
+
+      console.log(routeKey);
+    });
+
+    rootChangeDetector.ref = changeDetector;
   }
 
   ngOnInit(): void {
@@ -80,5 +124,4 @@ export class AppComponent implements OnInit, DoCheck {
   ngDoCheck(): void {
     console.log(this.doCheckCount++);
   }
-
 }

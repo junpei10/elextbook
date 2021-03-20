@@ -1,7 +1,6 @@
-import { DOCUMENT } from '@angular/common';
-import { ApplicationInitStatus, Inject, Injectable, TemplateRef } from '@angular/core';
+import { Injectable, TemplateRef } from '@angular/core';
 import { MlPortalAttachConfig } from '@material-lite/angular-cdk/portal';
-import { noop, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { rootChangeDetector } from './root-change-detector-ref';
 import { Fragment } from './service/fragment';
 import { MediaQueryObserver } from './service/media-query';

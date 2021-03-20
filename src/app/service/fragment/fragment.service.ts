@@ -13,11 +13,11 @@ interface ObserveConfig {
   providedIn: 'root'
 })
 export class Fragment {
-  readonly fragmentObservable: ActivatedRoute['fragment'];
+  readonly observable: ActivatedRoute['fragment'];
 
   get value(): string {
     // @ts-ignore
-    return this.fragmentObservable._value;
+    return this.observable._value;
   }
 
   private _navigate: Router['navigate'];
@@ -26,7 +26,7 @@ export class Fragment {
     _router: Router,
     _route: ActivatedRoute
   ) {
-    this.fragmentObservable = _route.fragment;
+    this.observable = _route.fragment;
     this._navigate = _router.navigate.bind(_router);
   }
 
@@ -42,7 +42,7 @@ export class Fragment {
 
   observe(name: string, config: ObserveConfig = {}): Subscription {
     let isMatching: boolean;
-    const observable = config.observable || this.fragmentObservable;
+    const observable = config.observable || this.observable;
     const subscription = observable
       .subscribe((currFragName) => {
         if (currFragName === name) {

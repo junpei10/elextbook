@@ -17,13 +17,8 @@ export class HomeComponent implements OnInit {
     private rootHeaderEvents: RootHeaderEvents
   ) {
     rootHeaderElement.content = null;
-    this.rootHeaderEvents.switchNormalMode();
+    // this.rootHeaderEvents.switchNormalMode();
   }
 
   ngOnInit(): void {}
-
-  historyBack(): void {
-    history.back();
-  }
-
 }

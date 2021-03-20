@@ -23,17 +23,20 @@ export class RootDrawer {
     _fragment.observe('drawer', {
       onMatch: () => this.open(),
       onEndMatching: () => this.close(),
-      observable: _fragment.fragmentObservable.pipe(skip(1))
+      observable: _fragment.observable.pipe(skip(1))
     });
   }
 
   open(): void {
     this.isExisted = true;
     // this.paneClass = 'root-header-drawer-pane';
-    // this._rootChangeDetector.ref.markForCheck();
+
+    this._rootChangeDetector.ref.markForCheck();
   }
 
   close(): void {
     this.isExisted = false;
+
+    this._rootChangeDetector.ref.markForCheck();
   }
 }

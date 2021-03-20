@@ -87,7 +87,14 @@ $pc-header-height: 64px;
     &-leave-to {
       opacity: 0;
       position: absolute;
-      left: 72px;
+
+      @include mp {
+        left: 72px;
+      }
+
+      @include pc {
+        left: 64px;
+      }
     }
   }
 
@@ -98,6 +105,11 @@ $pc-header-height: 64px;
       z-index: 1;
       margin: auto 16px;
       font-size: 24px;
+
+      svg {
+        height: 24px;
+        width: 24px;
+      }
     }
 
     @include pc {
@@ -160,6 +172,14 @@ $pc-header-height: 64px;
     min-height: calc(100vh - #{$pc-header-height});
   }
 
+  &-component-outlet {
+    width: 100%;
+
+    & > * {
+      display: block;
+    }
+  }
+
   &-nav {
     display: flex;
     background: white;
@@ -192,6 +212,20 @@ $pc-header-height: 64px;
       .ml-button {
         width: 100%;
         height: 40px;
+      }
+    }
+
+    &-straight-tracker .ml-tracker {
+      @include mp {
+        will-change: left;
+        transition-property: left;
+        transition-duration: 400ms;
+      }
+
+      @include pc {
+        will-change: top;
+        transition-property: top;
+        transition-duration: 400ms;
       }
     }
 

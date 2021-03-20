@@ -5,7 +5,7 @@ import { HomeComponent } from './views/home/home.component';
 
 export interface AppRouteData extends AppMetaData {
   key: string;
-  parentKey?: string;
+  parentKeys: string[];
 }
 
 export interface AppRoute extends Route {
@@ -21,7 +21,8 @@ const routes: AppRoutes = [
     component: HomeComponent,
     data: {
       key: 'home',
-      title: 'Home'
+      title: 'Home',
+      parentKeys: []
     }
   },
   {
@@ -29,7 +30,8 @@ const routes: AppRoutes = [
     loadChildren: () => import('./views/workbook/game').then((m) => m.WorkbookGameModule),
     data: {
       key: 'workbook-game',
-      title: 'Workbook'
+      title: 'Workbook',
+      parentKeys: []
     }
   },
   {
@@ -37,7 +39,8 @@ const routes: AppRoutes = [
     loadChildren: () => import('./views/workbook/list').then((m) => m.WorkbookListModule),
     data: {
       key: 'workbook-list',
-      title: 'Workbook'
+      title: 'Workbook',
+      parentKeys: []
     }
   },
   { path: '', redirectTo: '/home', pathMatch: 'full' }
