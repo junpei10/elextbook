@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
+import { OperatorFunction, Subscription } from 'rxjs';
 
 interface ObserveConfig {
   onMatch?: () => any;
   onEndMatching?: () => any;
-  autoUnsubscribe?: boolean;
-  observable?: Observable<any>;
+  pipeParams?: OperatorFunction<any, any>[];
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class Fragment {
+  private _history = history;
   readonly observable: ActivatedRoute['fragment'];
 
   get value(): string {
@@ -36,25 +36,35 @@ export class Fragment {
 
   remove(): void {
     if (this.value) {
-      history.back();
+      this._history.back();
+    }
+  }
+
+  toggle(name: string): void {
+    if (this.value) {
+      this._history.back();
+
+    } else {
+      this._navigate([], { fragment: name });
     }
   }
 
   observe(name: string, config: ObserveConfig = {}): Subscription {
     let isMatching: boolean;
-    const observable = config.observable || this.observable;
-    const subscription = observable
-      .subscribe((currFragName) => {
-        if (currFragName === name) {
-          config.onMatch?.();
-          isMatching = true;
+    const pipeParams = config.pipeParams;
+    const observable = pipeParams // @ts-ignore
+      ? this.observable.pipe(...config.pipeParams)
+      : this.observable;
 
-        } else if (isMatching) {
-          config.onEndMatching?.();
-          isMatching = false;
-        }
-      });
+    return observable.subscribe((newFragment) => {
+      if (newFragment === name) {
+        config.onMatch?.();
+        isMatching = true;
 
-    return subscription;
+      } else if (isMatching) {
+        config.onEndMatching?.();
+        isMatching = false;
+      }
+    });
   }
 }

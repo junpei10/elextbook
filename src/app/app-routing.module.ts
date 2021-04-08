@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Route, RouterModule } from '@angular/router';
 import { AppMetaData } from './app-meta.service';
 import { HomeComponent } from './views/home/home.component';
+import { NotFoundComponent } from './views/not-found/not-found.component';
 
 export interface AppRouteData extends AppMetaData {
   key: string;
@@ -43,11 +44,18 @@ const routes: AppRoutes = [
       parentKeys: []
     }
   },
-  { path: '', redirectTo: '/home', pathMatch: 'full' }
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
+  { path: '**', component: NotFoundComponent,
+    data: {
+      key: 'not-found',
+      title: 'NotFound',
+      parentKeys: []
+    }
+  }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

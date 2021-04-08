@@ -14,7 +14,7 @@ type Action<A extends ActionType> = A extends string
 
 type Reducer<S, A> = (state: S, action: Action<A>) => S;
 interface InitialStore<S, A extends ActionType, IS> {
-  state?: IS;
+  state: IS;
   reducer: Reducer<S, A>;
 }
 
@@ -26,7 +26,7 @@ interface StoreConfig<SJ> {
 /**
  * @generics `S = state`  `A = action`  `SJ = subject`  IS = `initial state (Don't set)`
  */
-export class Store<S, A extends ActionType, SJ extends Subject<S> = Subject<S>, IS extends S = S> {
+export class Store<S, A extends ActionType, SJ extends Subject<any> = Subject<any>, IS extends S = S> {
   private _subject: SJ;
   readonly changes: Observable<S>;
 
@@ -38,15 +38,13 @@ export class Store<S, A extends ActionType, SJ extends Subject<S> = Subject<S>, 
   private _deepCopy: <T>(obj: T) => T;
 
   constructor(store: InitialStore<S, A, IS>, config: StoreConfig<SJ> = {}) {
-    // @ts-ignore: assign the readonly variable
-    this._state = store.state;
+    this.state = store.state;
     this._reducer = store.reducer;
 
-    const sj = this._subject = config.subject
-      ? config.subject
-      : new Subject() as SJ;
+    const subject = this._subject =
+      config.subject || new Subject() as SJ;
 
-    this.changes = sj.asObservable();
+    this.changes = subject.asObservable();
 
     this._deepCopy = config.deepCopy || noop;
   }
@@ -56,10 +54,10 @@ export class Store<S, A extends ActionType, SJ extends Subject<S> = Subject<S>, 
 
     this._subject.next(this._deepCopy(newState));
 
-    // @ts-ignore: assign the readonly variable
-    this._state = newState;
+    // @ts-expect-error: assign the readonly variable
+    this.state = newState;
 
-    // @ts-ignore: assign the readonly variable
+    // @ts-expect-error: assign the readonly variable
     this.lastEnteredActionType = type;
   }
 }

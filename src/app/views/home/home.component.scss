@@ -1,0 +1,196 @@
+@import '@material-lite/angular/theming';
+@import '../../service/media-query/_media-query.sass';
+@import '../../app';
+
+app-home {
+  display: block;
+  width: 100%;
+
+  padding-bottom: 48px;
+}
+
+$mp-offset-top: 128px;
+$pc-offset-top: 64px;
+
+.home-first-view {
+  position: relative;
+
+  height: 100vh;
+  min-height: 100vh;
+
+  box-sizing: border-box;
+  padding-top: $mp-offset-top;
+  margin-top: -$mp-offset-top;
+
+  background-color: black;
+  color: white;
+
+  @include pc {
+    padding-top: $pc-offset-top;
+    margin-top: -$pc-offset-top;
+  }
+
+  &-mask {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    padding-top: $mp-offset-top;
+    margin-top: -$mp-offset-top;
+
+    background-image: url('https://storage.googleapis.com/elextbook.appspot.com/home-first-view.png');
+    background-color: white;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+
+    transition: ml-opacity-transition(slow);
+
+    .first-load & {
+      opacity: 0;
+    }
+
+    &.loaded-image {
+      opacity: 0.24 !important;
+    }
+
+    @include pc {
+      padding: 0;
+      margin-top: -64px;
+    }
+  }
+  
+  &-content {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    height: 100%;
+
+    box-sizing: border-box;
+    padding-bottom: 16%;
+  }
+
+  &-heading {
+    font-size: 48px;
+    margin: 0;
+    text-align: center;
+
+    @include pc {
+      font-size: 64px;
+      text-align: left;
+      padding: 32px 80px;
+    }
+  }
+
+  &-divider {
+    background-color: white;
+    height: 2px;
+    margin: 8px auto;
+    width: 48%;
+
+    @include pc {
+      display: none;
+    }
+  }
+
+  &-catch {
+    display: flex;
+
+    h2 { // <= 仮 （ロゴを挿入するため img タグ が入る）
+      display: block;
+      margin: 0 auto;
+      font-size: 40px; // <= 仮
+
+      @include pc {
+        margin-left: auto;
+        padding: 32px 80px;
+        margin: 0 0 0 auto;
+      }
+    }
+  }
+}
+
+.home-pwa {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  box-sizing: border-box;
+  padding: 40px 16px;
+
+  @include pc {
+    flex-direction: row;
+    justify-content: space-evenly;
+    padding: 64px 40px;
+  }
+
+  &-main {
+    order: 1;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    @include pc {
+      order: 0;
+    }
+  }
+
+  &-heading {
+    margin: 0;
+    text-align: center;
+  }
+
+  &-subheading {
+    margin: 8px 0 16px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  &-button-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  &-button {
+    margin: 8px 16px;
+    transition: ml-create-transition(background-color, normal, angular);
+
+    &.installed {
+      background-color: #8BC34A;
+    }
+  }
+
+  &-comment {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+    font-size: 14px;
+
+    span {
+      display: block;
+    }
+  }
+
+  &-img {
+    display: block;
+    margin: auto;
+    margin-bottom: 24px;
+
+    width: 120px;
+    height: 120px;
+
+    @include pc {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 0;
+    }
+  }
+}

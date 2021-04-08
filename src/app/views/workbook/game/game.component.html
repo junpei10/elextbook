@@ -1,41 +1,179 @@
-<ng-template [ngIf]="display === 'ready'">
-  <section class="workbook-section">
-    Ready
-    <button mlButton (click)="fragment.add('playing')">Play</button>
+<!-- Header -->
+<ng-template #rootHeaderContent>
+  <div class="workbook-header-container">
+    <ng-template [ngIf]="mediaQuery.store.state === 'mp'" [ngIfThen]="mpHeaderContent" [ngIfElse]="pcHeaderContent"></ng-template>
+  </div>
+</ng-template>
+
+<ng-template #mpHeaderContent>
+  <ng-container *ngIf="isPlaying; then playingContent; else restingContent"></ng-container>
+
+  <ng-template #restingContent>
+    <h1 class="workbook-mp-header-actions-heading">{{ counter ? 'Replay' : 'Play' }}</h1>
+  </ng-template>
+
+  <ng-template #playingContent>
+    <div class="workbook-mp-header-playing">
+      <span class="workbook-mp-header-playing-heading">{{ data.shortTitle }} 第{{ currentQuestion!.index + 1 }}問</span>
+      <span class="workbook-mp-header-counter workbook-header-counter">{{ shadeAnsweredCount }} / {{ questionLength }}</span>
+      <span class="workbook-mp-header-type-name">{{ currentGameData!.name }}</span>
+    </div>
+  </ng-template>
+</ng-template>
+
+<ng-template #pcHeaderContent>
+  <!-- <ng-container *ngIf="isPlaying; then playingContent; else restingContent"></ng-container> -->
+  <ng-container *ngIf="isPlaying; then playingContent; else restingContent"></ng-container>
+
+  <ng-template #restingContent>
+    <h1 class="workbook-pc-header-heading">{{ data?.title }}</h1>
+  </ng-template>
+
+  <ng-template #playingContent>
+    <h1 class="workbook-pc-header-heading">{{ data.shortTitle }}　第{{ currentQuestion!.index + 1 }}問　{{ currentGameData!.name }}</h1>
+  </ng-template>
+</ng-template>
+
+<!-- Screen Outlet -->
+<ng-template [ngIf]="isPlaying" [ngIfThen]="playingScreen" [ngIfElse]="restingScreen"></ng-template>
+
+<ng-template #restingScreen>
+  <section class="workbook-resting">
+    <h1 class="workbook-resting-heading">{{ data?.title }}</h1>
+
+    <!-- Action-buttons -->
+    <div class="workbook-resting-container" style="padding: 0">
+      <button class="workbook-resting-action-button" *ngIf="mediaQuery.store.state === 'pc'" mlButton theme="accent" (click)="startGame()">スタート</button>
+      <ng-template [ngIf]="counter">
+        <button class="workbook-resting-action-button" mlButton theme="warn" [disabled]="counter.total.mistaken === 0" (click)="startGame(true)">
+          ミスした問題のみ出題
+        </button>
+        <button class="workbook-resting-action-button" mlButton theme="primary" (click)="configSection.scrollIntoView({ behavior: 'smooth' })">
+          設定を変更する
+        </button>
+      </ng-template>
+    </div>
+
+    <!-- Results -->
+    <!-- <div class="workbook-resting-container" style="padding: 0">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody></tbody>
+      </table>
+    </div> -->
+
+    <!-- Configs -->
+    <div class="workbook-resting-container" #configSection>
+      <div class="workbook-resting-config">
+        <h2 class="workbook-resting-config-heading">ゲーム設定</h2>
+        <div class="workbook-resting-config-form">
+          <!-- <ml-slide-toggle theme="accent" [checked]="config.mix" (change)="config.mix = $event.checked">
+            <span class="workbook-resting-config-title">ごちゃまぜ</span>
+            <span class="workbook-resting-config-desc ml-hint">ジャンル問わず、すべての問題をランダムに出題するモード</span>
+          </ml-slide-toggle> -->
+          <ml-slide-toggle theme="accent" [checked]="config.hasSound" (change)="config.hasSound = $event.checked; setSound($event.checked)">
+            <span class="workbook-resting-config-title">回答音声</span>
+            <span class="workbook-resting-config-desc ml-hint">問題を答えたときに発生する音声の設定</span>
+          </ml-slide-toggle>
+        </div>
+      </div>
+      <ng-template [ngIf]="data">
+        <div *ngFor="let game of data.games" class="workbook-resting-config">
+          <h2 class="workbook-resting-config-heading">{{ game.name }}</h2>
+          <div class="workbook-resting-config-form">
+            <ml-slide-toggle
+              theme="accent"
+              [checked]="localConfig[game.type]?.random"
+              [disabled]="localConfig[game.type]?.disabled"
+              (change)="localConfig[game.type].random = $event.checked"
+            >
+              <span class="workbook-resting-config-title">ランダム</span>
+            </ml-slide-toggle>
+            <ml-slide-toggle theme="accent" [checked]="localConfig[game.type]?.disabled" (change)="onChangeDisabledConfig($event, game.type)">
+              <span class="workbook-playing-content workbook-resting-config-title">出題しない</span>
+            </ml-slide-toggle>
+          </div>
+        </div>
+      </ng-template>
+    </div>
   </section>
 </ng-template>
 
-<ng-template [ngIf]="display === 'playing'">
-  <section class="workbook-playing-section" [class]="playingDisplayClass">
+<ng-template #playingScreen>
+  <section class="workbook-playing" [class]="playingScreenClass">
     <div class="workbook-playing-title-container">
-      <div class="workbook-playing-content" [innerHTML]="currentQuestion.title"></div>
+      <div class="workbook-text-content title" [innerHTML]="currentQuestion!.title"></div>
     </div>
 
     <div class="workbook-playing-answer-container">
-      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-0" (click)="onClickAnswerButton(0)">
-        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[0]"></div>
+      <div *ngIf="currentGameData!.buttonToOpenDialog" mlButton variant="fab" (click)="hasOpenedDialog = true" class="workbook-button-to-open-dialog">
+        <div [innerHTML]="currentGameData!.buttonToOpenDialog"></div>
       </div>
 
-      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-1" (click)="onClickAnswerButton(1)">
-        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[1]"></div>
+      <div mlRipple class="workbook-playing-answer-card" (click)="onClickAnswerButton(0)">
+        <div class="workbook-playing-answer-overlay overlay-0"></div>
+        <div class="workbook-text-content answer" [innerHTML]="currentQuestion!.answers[0]"></div>
       </div>
-
-      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-2" (click)="onClickAnswerButton(2)">
-        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[2]"></div>
+      <div mlRipple class="workbook-playing-answer-card n1" (click)="onClickAnswerButton(1)">
+        <div class="workbook-playing-answer-overlay overlay-1"></div>
+        <div class="workbook-text-content answer" [innerHTML]="currentQuestion!.answers[1]"></div>
       </div>
-
-      <div mlRipple class="workbook-playing-answer-card workbook-playing-answer-card-3" (click)="onClickAnswerButton(3)">
-        <div class="workbook-playing-content workbook-playing-answer-content" [innerHTML]="currentQuestion.answers[3]"></div>
+      <div mlRipple class="workbook-playing-answer-card" (click)="onClickAnswerButton(2)">
+        <div class="workbook-playing-answer-overlay overlay-2"></div>
+        <div class="workbook-text-content answer" [innerHTML]="currentQuestion!.answers[2]"></div>
+      </div>
+      <div mlRipple class="workbook-playing-answer-card" (click)="onClickAnswerButton(3)">
+        <div class="workbook-playing-answer-overlay overlay-3"></div>
+        <div class="workbook-text-content answer" [innerHTML]="currentQuestion!.answers[3]"></div>
       </div>
     </div>
   </section>
 </ng-template>
 
-<ng-template [ngIf]="display === 'result'">
+<!-- <ng-template [ngIf]="display === 'result'">
   <section class="workbook-section">
-    Result {{ counter.correctCount }} {{ counter.mistakeCount }}
-    <button mlButton (click)="display = 'ready'">Change config</button>
-    <button mlButton (click)="play()">Replay</button>
-    <button [mlButton]="counter.mistakeCount !== 0" (click)="replayOnlyMistakes()">Replay only the mistake</button>
+    <div class="workbook-result-nav">
+      <button mlButton class="workbook-result-nav-button" theme="primary" (click)="getresting()">設定を変更する</button>
+      <button mlButton class="workbook-result-nav-button" theme="accent" (click)="startGame('play')">もう一度遊ぶ</button>
+      <button mlButton class="workbook-result-nav-button" theme="warn" [disabled]="counter.mistaken === 0" (click)="startGame('replay')">
+        間違った問題だけで遊ぶ
+      </button>
+    </div>
+    <div></div>
   </section>
+</ng-template> -->
+
+<ng-template [ngIf]="data">
+  <div class="workbook-dialog" [class.opening]="hasOpenedDialog">
+    <header class="workbook-dialog-header">
+      <!-- 削除予定 -->
+      <button mlButton variant="icon" (click)="hasOpenedDialog = false">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+          <path d="M0 0h24v24H0z" fill="none" />
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+        </svg>
+      </button>
+    </header>
+
+    <div
+      *ngFor="let data of dialogsData"
+      class="workbook-dialog-content workbook-text-content"
+      [class.shown]="hasOpenedDialog && currentGameData!.type === data.type"
+      [innerHTML]="data.content"
+    ></div>
+  </div>
 </ng-template>

@@ -1,80 +1,172 @@
-<header id="root-header-pane" [class]="rootHeaderStyling.paneClass">
-  <section class="root-header-wrapper">
+<header #rootHeaderRef class="root-header">
+  <section class="root-header-view">
     <div class="root-header-contents">
       <button
         mlButton
-        hoverAction="enable"
-        (click)="rootHeaderEvents.commonButtonClickEvent()"
-        [class]="'root-header-common-button root-header-common-button-' + rootHeaderStyling.commonButtonType"
-        [variant]="mediaQueryStatus.headerCommonButtonVariant"
+        hoverAction="enabled"
+        class="root-header-left-container root-header-main-action-button"
+        (click)="rootHeader.mainAction()"
+        [variant]="mediaQueryStatus.mainActionButtonVariant"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <svg class="root-header-drawer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
           <path d="M0 0h24v24H0z" fill="none" />
           <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
         </svg>
+        <svg class="root-header-backing-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"
+          />
+        </svg>
       </button>
 
-      <ng-template
-        [mlPortalOutlet]="rootHeaderElement.content || defaultRouteHeaderContent"
-        [mlPortalOutletAttachConfig]="rootHeaderElement.contentPortalConfig"
-      ></ng-template>
+      <div class="root-header-center-container">
+        <ng-template [mlPortalOutlet]="rootHeader.content" [mlPortalOutletAttachConfig]="headerContentPortalConfig"></ng-template>
+      </div>
 
-      <div *ngIf="mediaQueryStatus.isMp" mlRipple (click)="rootHeaderEvents.mpWrapperClickEvent()" class="root-header-ripple"></div>
+      <div class="root-header-right-container">
+        <button mlButton class="root-header-right-container-button" (click)="toggleDarkTheme()" variant="icon" hoverAction="enabled">
+          <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+            <g><path d="M0,0h24v24H0V0z" fill="none" /></g>
+            <g>
+              <path
+                d="M12,4.81L12,19c-3.31,0-6-2.63-6-5.87c0-1.56,0.62-3.03,1.75-4.14L12,4.81 M6.35,7.56L6.35,7.56C4.9,8.99,4,10.96,4,13.13 C4,17.48,7.58,21,12,21c4.42,0,8-3.52,8-7.87c0-2.17-0.9-4.14-2.35-5.57l0,0L12,2L6.35,7.56z"
+              />
+            </g>
+          </svg>
+        </button>
+      </div>
+
+      <div *ngIf="mediaQueryStatus.isMp" mlRipple (click)="rootHeader.mpWrapperClickEvent()" class="root-header-wrapper"></div>
     </div>
 
-    <div class="root-header-predictive-candidates">
+    <div class="root-header-suggest">
       <!-- <div *ngFor="let candidate of rootHeader.predictiveCandidates"></div> -->
     </div>
-
-    <ng-template #defaultRouteHeaderContent>
-      <div class="root-header-content">
-        <h3>Elextbook</h3>
-      </div>
-    </ng-template>
   </section>
 </header>
 
-<main class="root-main">
-  <div class="root-main-component-outlet" [@routeAnimation]="routeKey">
-    <router-outlet></router-outlet>
-  </div>
-
-  <nav class="root-main-nav">
-    <ml-straight-tracker
-      class="root-main-nav-straight-tracker"
-      [targetIndex]="footerTabSelectedIndex"
-      [position]="mediaQueryStatus.mainNavTrackerPosition"
-      [orientation]="mediaQueryStatus.mainNavTrackerOrientation"
-    >
-      <div class="root-main-nav-ink-bar ml-primary-bg"></div>
-    </ml-straight-tracker>
-
-    <button mlButton routerLink="/home">
-      <div class="root-main-nav-button-content">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M0 0h24v24H0z" fill="none" />
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-        <span>Home</span>
-      </div>
-    </button>
-
-    <button mlButton routerLink="/workbook-list">
-      <div class="root-main-nav-button-content">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M0 0h24v24H0z" fill="none" />
-          <path
-            d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"
-          />
-        </svg>
-        <span>Workbook</span>
-      </div>
-    </button>
-  </nav>
+<main class="root-main" [@routeAnimation]="routeKey">
+  <router-outlet></router-outlet>
 </main>
 
-<aside *ngIf="rootDrawer.isExisted" [class]="rootDrawer.paneClass">
-  <section class="root-drawer-content">
-    <button mlButton (click)="history.back()">ボタン</button>
+<nav class="root-nav" [class.root-nav-mp-hidden]="rootMain.hasHiddenMpNav">
+  <ml-straight-tracker
+    class="root-nav-straight-tracker"
+    [targetIndex]="routeNavSelectedIndex"
+    [position]="mediaQueryStatus.navTrackerPosition"
+    [orientation]="mediaQueryStatus.navTrackerOrientation"
+    [transitionClasses]="{ initializing: true }"
+  >
+    <div class="root-nav-ink-bar ml-primary-bg"></div>
+  </ml-straight-tracker>
+
+  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.home" routerLink="/home">
+    <div class="root-nav-button-content">
+      <svg class="root-nav-button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+      </svg>
+      <span class="root-nav-button-heading">Home</span>
+    </div>
+  </button>
+
+  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.textbook" routerLink="/textbook-list" disabled>
+    <div class="root-nav-button-content">
+      <svg class="root-nav-button-icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+        <g><rect fill="none" height="24" width="24" /></g>
+        <g>
+          <g />
+          <g>
+            <path
+              d="M21,5c-1.11-0.35-2.33-0.5-3.5-0.5c-1.95,0-4.05,0.4-5.5,1.5c-1.45-1.1-3.55-1.5-5.5-1.5S2.45,4.9,1,6v14.65 c0,0.25,0.25,0.5,0.5,0.5c0.1,0,0.15-0.05,0.25-0.05C3.1,20.45,5.05,20,6.5,20c1.95,0,4.05,0.4,5.5,1.5c1.35-0.85,3.8-1.5,5.5-1.5 c1.65,0,3.35,0.3,4.75,1.05c0.1,0.05,0.15,0.05,0.25,0.05c0.25,0,0.5-0.25,0.5-0.5V6C22.4,5.55,21.75,5.25,21,5z M21,18.5 c-1.1-0.35-2.3-0.5-3.5-0.5c-1.7,0-4.15,0.65-5.5,1.5V8c1.35-0.85,3.8-1.5,5.5-1.5c1.2,0,2.4,0.15,3.5,0.5V18.5z"
+            />
+            <g>
+              <path d="M17.5,10.5c0.88,0,1.73,0.09,2.5,0.26V9.24C19.21,9.09,18.36,9,17.5,9c-1.7,0-3.24,0.29-4.5,0.83v1.66 C14.13,10.85,15.7,10.5,17.5,10.5z" />
+              <path
+                d="M13,12.49v1.66c1.13-0.64,2.7-0.99,4.5-0.99c0.88,0,1.73,0.09,2.5,0.26V11.9c-0.79-0.15-1.64-0.24-2.5-0.24 C15.8,11.66,14.26,11.96,13,12.49z"
+              />
+              <path
+                d="M17.5,14.33c-1.7,0-3.24,0.29-4.5,0.83v1.66c1.13-0.64,2.7-0.99,4.5-0.99c0.88,0,1.73,0.09,2.5,0.26v-1.52 C19.21,14.41,18.36,14.33,17.5,14.33z"
+              />
+            </g>
+          </g>
+        </g>
+      </svg>
+
+      <span class="root-nav-button-heading">Textbook</span>
+    </div>
+  </button>
+
+  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.workbook" routerLink="/workbook-list">
+    <div class="root-nav-button-content">
+      <svg class="root-nav-button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path
+          d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"
+        />
+      </svg>
+      <span class="root-nav-button-heading">Workbook</span>
+    </div>
+  </button>
+
+  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.library" routerLink="/library" disabled>
+    <div class="root-nav-button-content">
+      <svg class="root-nav-button-icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path
+          d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"
+        />
+      </svg>
+
+      <span class="root-nav-button-heading">Library</span>
+    </div>
+  </button>
+
+  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.settings" routerLink="/settings" disabled>
+    <div class="root-nav-button-content">
+      <svg class="root-nav-button-icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+        <g>
+          <path d="M0,0h24v24H0V0z" fill="none" />
+          <path
+            d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"
+          />
+        </g>
+      </svg>
+
+      <span class="root-nav-button-heading">Settings</span>
+    </div>
+  </button>
+</nav>
+
+<aside *ngIf="rootDrawer.isExisted" class="root-drawer-pane" [class.leave-to]="rootDrawer.leaveTo" (click)="fragment.remove()">
+  <section class="root-drawer-content" (click)="$event.stopPropagation()">
+    <ng-container *ngIf="mediaQueryStatus.isMp; then mpDrawer; else pcDrawer"></ng-container>
   </section>
+
+  <ng-template #mpDrawer>
+    <header class="root-drawer-mp-header">
+      <h1>Elextbook</h1>
+    </header>
+    <span class="root-drawer-mp-divider"></span>
+    <div class="root-drawer-mp-section">
+      <span class="root-drawer-mp-section-title ml-hint">Route</span>
+      <button mlButton class="root-drawer-mp-section-button" disabled>Guide</button>
+    </div>
+    <span class="root-drawer-mp-divider"></span>
+    <div class="root-drawer-mp-section">
+      <span class="root-drawer-mp-section-title ml-hint">Settings</span>
+      <button mlButton (click)="toggleDarkTheme()" class="root-drawer-mp-section-button">Toggle dark theme</button>
+    </div>
+  </ng-template>
+
+  <ng-template #pcDrawer>
+    <div class="root-drawer-pc-name-buttons">
+      <button mlButton class="root-drawer-pc-button" routerLink="/home" [theme]="routeNavSelectedRoute.home">Home</button>
+      <button mlButton class="root-drawer-pc-button" routerLink="/textbook-list" [theme]="routeNavSelectedRoute.textbook" disabled>Textbook</button>
+      <button mlButton class="root-drawer-pc-button" routerLink="/workbook-list" [theme]="routeNavSelectedRoute.workbook">Workbook</button>
+      <button mlButton class="root-drawer-pc-button" routerLink="/library" [theme]="routeNavSelectedRoute.library" disabled>Library</button>
+      <button mlButton class="root-drawer-pc-button" routerLink="/settings" [theme]="routeNavSelectedRoute.settings" disabled>Settings</button>
+    </div>
+  </ng-template>
 </aside>

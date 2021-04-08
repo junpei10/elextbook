@@ -2,28 +2,28 @@ import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
 import { skip } from 'rxjs/operators';
 import { rootChangeDetector } from './root-change-detector-ref';
-import { RootHeaderEvents } from './root-header.service';
 import { Fragment } from './service/fragment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RootDrawer {
-  paneClass: string = 'root-drawer-pane';
-
   isExisted: boolean;
+
+  leaveTo: number;
+
+  leaveAnimationDuration: number = 320;
 
   private _rootChangeDetector = rootChangeDetector;
 
   constructor(
     @Inject(DOCUMENT) _document: Document,
     _fragment: Fragment,
-    _rootHeaderEvents: RootHeaderEvents
   ) {
     _fragment.observe('drawer', {
       onMatch: () => this.open(),
       onEndMatching: () => this.close(),
-      observable: _fragment.observable.pipe(skip(1))
+      pipeParams: [skip(1)]
     });
   }
 
@@ -35,7 +35,17 @@ export class RootDrawer {
   }
 
   close(): void {
-    this.isExisted = false;
+    const timeout = this.leaveTo;
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    this.leaveTo = setTimeout(() => {
+      this.isExisted = false;
+      this.leaveTo = 0;
+
+      this._rootChangeDetector.ref.markForCheck();
+    }, this.leaveAnimationDuration) as any;
 
     this._rootChangeDetector.ref.markForCheck();
   }

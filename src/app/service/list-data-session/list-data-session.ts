@@ -9,6 +9,8 @@ export interface ListData {
   };
 }
 
+type Query = firebase.default.firestore.Query<firebase.default.firestore.DocumentData>;
+
 export class ListDataSession<D extends ListData> {
   value: {
     [category: string]: D[]
@@ -31,7 +33,8 @@ export class ListDataSession<D extends ListData> {
     private _firestore: Firestore,
     private _ngZone: NgZone,
     private _changeDetector: ChangeDetectorRef
-  ) {}
+  ) {
+  }
 
   private _initialize(): void {
     this.waitingResponse = true;
@@ -47,15 +50,22 @@ export class ListDataSession<D extends ListData> {
     });
   }
 
-  getAllListData(): void {
+  private _setValueToFirestore(path: string, value: object): void {
+    if (!path || !value) { console.warn('cancel'); return; }
+
+    this._firestore.collection('workbook-quizzes').doc(path).set(value);
+  }
+
+  getAllListData(): Promise<void> {
     this._initialize();
 
-    this._ngZone.runOutsideAngular(() => {
-      this._firestore.collection(this._collectionPath)
+    return this._ngZone.runOutsideAngular(() => {
+      return this._firestore.collection(this._collectionPath)
         .orderBy('index', this.sortDirection).get()
         .then((result) => {
           if (result.empty) {
             this.notMatched = true;
+
           } else {
             result.forEach((value) => {
               this.distributeData(value.data() as any);
@@ -66,23 +76,24 @@ export class ListDataSession<D extends ListData> {
     });
   }
 
-  getSearchedListData(searchWords: string[]): void {
+  getSearchedListData(searchWords: string[]): Promise<void> {
     this._initialize();
 
-    this._ngZone.runOutsideAngular(() => {
-      let query = this._firestore.collection(this._collectionPath) as any;
+    return this._ngZone.runOutsideAngular(() => {
+      // tslint:disable-next-line:max-line-length
+      let query = this._firestore.collection(this._collectionPath) as Query;
 
       searchWords.forEach((word) => {
         query = query.where(`searchToken.${word}`, '==', true);
       });
 
-      query.get()
+      return query.get()
         .then((result) => {
           if (result.empty) {
             this.notMatched = true;
           } else {
             result.forEach((res) => {
-              this.distributeData(res.data());
+              this.distributeData(res.data() as D);
             });
 
             const { _sort, value, categories } = this;
@@ -110,11 +121,11 @@ export class ListDataSession<D extends ListData> {
   }
 }
 
-const ascIndexSort = (array: { index: number }[]) => {
+export const ascIndexSort = (array: { index: number }[]) => {
   array.sort((x, y) => x.index > y.index ? 1 : -1);
 };
 
-const descIndexSort = (array: { index: number }[]) => {
+export const descIndexSort = (array: { index: number }[]) => {
   array.sort((x, y) => x.index > y.index ? -1 : 1);
 };
 

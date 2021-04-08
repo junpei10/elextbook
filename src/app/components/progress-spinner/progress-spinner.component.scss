@@ -1,0 +1,86 @@
+@import '@material-lite/angular/theming';
+@import '../../app';
+
+$duration: map-get($ml-animation-duration, normal);
+// $function: map-get($ml-animation-function, angular);
+$function: linear;
+
+.app-progress-spinner {
+  display: block;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100%;
+  z-index: 2;
+  // opacity: 1 !important;
+  position: fixed !important;
+  // animation: none !important;
+
+  @include app-theme(background-color, background);
+}
+
+@mixin _border-style($color) {
+  border-top: 1.1em solid $color;
+  border-right: 1.1em solid rgba($color, 0.2);
+  border-bottom: 1.1em solid rgba($color, 0.2);
+  border-left: 1.1em solid rgba($color, 0.2);
+}
+
+.app-progress-spinner-body,
+.app-progress-spinner-body:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.app-progress-spinner-body {
+  margin: 112px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+
+  @include _border-style(map-get(map-get($app-light-palette, accent), color));
+
+  .dark-theme {
+    @include _border-style(map-get(map-get($app-light-palette, accent), color));
+  }
+
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: app-progress-spinner-animation 800ms infinite $function;
+  animation: app-progress-spinner-animation 800ms infinite $function;
+}
+@-webkit-keyframes app-progress-spinner-animation {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes app-progress-spinner-animation {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+.app-progress-spinner {
+  display: none;
+}
+
+.spinner-brothers-animation-noopable {
+  > * {
+    display: none;
+  }
+
+  .app-progress-spinner {
+    display: block !important;
+  }
+}

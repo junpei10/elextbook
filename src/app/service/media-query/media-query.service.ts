@@ -23,21 +23,22 @@ export class MediaQueryObserver {
       }
     }
   }, {
-    subject: new BehaviorSubject(null)
+    subject: new BehaviorSubject('mp')
   });
 
-  mediaQueryList: MediaQueryList | undefined;
+  mediaQueryList: MediaQueryList | null;
 
   observe(breakpoint: string): void {
-    if (this.mediaQueryList) { return; }
-
     const mql = this.mediaQueryList = matchMedia(breakpoint);
-    mql.addEventListener('change', this._onChange.bind({ store: this.store }));
+
+    mql.addEventListener
+      ? mql.addEventListener('change', this._onChange.bind(this))
+      : mql.addListener(this._onChange.bind(this));
 
     this._onChange(mql);
   }
 
-  private _onChange(event: MediaQueryList): void {
+  private _onChange(event: MediaQueryListEvent | MediaQueryList): void {
     event.matches
       ? this.store.dispatch({ type: 'PC' })
       : this.store.dispatch({ type: 'MP' });
@@ -47,7 +48,6 @@ export class MediaQueryObserver {
     if (!this.mediaQueryList) { return; }
 
     this.mediaQueryList.removeEventListener('change', this._onChange.bind({ store: this.store }));
-    this.mediaQueryList = undefined;
+    this.mediaQueryList = null;
   }
-
 }

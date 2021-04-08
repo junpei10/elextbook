@@ -1,140 +1,139 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, NgZone, OnDestroy, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { noop } from '@material-lite/angular-cdk/utils';
+import { MlSlideToggleChange } from '@material-lite/angular/slide-toggle';
+import { Subscription } from 'rxjs';
+import { skip } from 'rxjs/operators';
+import { RootHeader } from 'src/app/root-header.service';
+import { RootMain } from 'src/app/root-main.service';
 import { Firestore, FIRESTORE } from 'src/app/service/firestore';
 import { Fragment } from 'src/app/service/fragment';
-import { RunOutsideNgZone, RUN_NG_ZONE, RUN_OUTSIDE_NG_ZONE } from 'src/app/utils';
+import { ascIndexSort } from 'src/app/service/list-data-session';
+import { MediaQueryObserver } from 'src/app/service/media-query';
 import { WorkbookData, WORKBOOK_CURRENT_DATA } from '../workbook';
 
-type GameConfig = GameConfigForDefault | GameConfigForDenko;
-
-interface GameConfigForDefault {
-  random: boolean;
-  repeatCount: number;
-  hasSound: boolean;
-}
-
-interface GameConfigForDenko {
-  general: {
-    random: boolean;
-    disabled: boolean;
-  };
-  wiringDiagram: this['general'];
+interface CommonGameConfig {
   mix: boolean;
   repeatCount: number;
   hasSound: boolean;
 }
 
-// type WorkbookGameConfig = WorkbookGameConfigForDenko | WorkbookG {
-//   general: {
-//     random: boolean;
-//     disabled: boolean;
-//   };
-//   wiringDiagram: this['general'];
-//   mix: boolean;
-//   repeatCount: number;
-// }
-
 interface Question {
   index: number;
   title: string;
-  answers: [any, any, any, any];
+  answers: [string, string, string, string];
   correctAnswerIndex: 0 | 1 | 2 | 3;
 }
 
-type Quiz = Question[];
-
-const QUIZ: Quiz = [
-  {
-    index: 0,
-    title: 'じゅんぺいの正しい<span class="bold">年齢</span>は？',
-    answers: [17, 18, 19, 20],
-    correctAnswerIndex: 0
-  },
-  {
-    index: 1,
-    title: '正しい<span class="bold">漢字</span>は？',
-    answers: ['順平', '潤平', '淳平', '純平'],
-    correctAnswerIndex: 3
-  },
-  {
-    index: 2,
-    title: '正しい<span class="bold">漢字</span>は？',
-    answers: ['順平', '潤平', '淳平', '純平'],
-    correctAnswerIndex: 3
-  }
-];
-
-const CONFIG: GameConfigForDenko = {
-  general: {
-    random: false,
-    disabled: false,
-  },
-  wiringDiagram: {
-    random: false,
-    disabled: false
-  },
-  mix: false,
-  repeatCount: 0,
-  hasSound: true
+type Quiz = {
+  [key: string]: Question[]
 };
 
+
+interface Counts {
+  answered: number;
+  corrected: number;
+  mistaken: number;
+}
+type Counter = {
+  total: Counts;
+  [key: string]: Counts;
+};
+
+
 @Component({
-  selector: 'app-workbook',
+  selector: 'app-workbook-game',
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None
 })
 export class WorkbookGameComponent implements OnDestroy {
+  @ViewChild('rootHeaderContent', {static: true})
+  private set _onSetRootHeaderContent(templateRef: TemplateRef<any>){
+    this._rootHeader.content = templateRef;
+  }
+
   hasLoaded: boolean;
-  display: 'result' | 'playing' | 'ready' = 'ready';
 
-  playingDisplayClass: string;
+  isPlaying: boolean;
+  playingScreenClass: string;
 
-  // データベースから取得した"Quiz"を代入する
-  quiz: Quiz = QUIZ;
+  quiz: Quiz;
   data: WorkbookData;
+  gameIdentifiers: [number, string][] = [];
 
-  config: GameConfig = CONFIG;
+  readonly config: CommonGameConfig = {
+    mix: false,
+    hasSound: true,
+    repeatCount: 0
+  };
 
-  // 各問題ごとのデータ（少なければオブジェクトにまとめない）
-  currentQuestion: Quiz[number];
-  currentAnsweredIndex: number | null;
+  readonly localConfig: {
+    [key: string]: {
+      random: boolean;
+      disabled: boolean;
+    };
+  } = {};
+
+  questionOrderIndexesRef: {[key: string]: number[]} = {};
 
   questionOrderIndexes: number[];
   questionLength: number;
-  questionOrderIndexesFactory: (config: GameConfig) => number[];
 
-  counter: {
-    answered: number;
-    correctCount: number;
-    mistakeCount: number;
-  };
+  // ゲームで遊ばれているデータ
+  currentQuestion: Question | null;
+  currentAnsweredIndex: number | null;
+  currentGameData: WorkbookData['games'][number] | null;
 
-  repeatedCount: number;
+  // 初めは存在しない
+  counter: Counter;
+  shadeAnsweredCount: number;
 
   mistakeQuestionIndexes: number[] = [];
 
+  repeatedCount: number;
+
   playBuzzer: PlayBuzzer = playBuzzer;
+
+  fragmentSubscription: Subscription;
+
+  hasOpenedDialog: boolean;
+  dialogsData: {
+    type: string;
+    content: string;
+  }[] = [];
+
+  private _startGame: () => void = this._playFromBeginning.bind(this);
+
+  private _mediaQueryChangesSubscription: Subscription;
 
   constructor(
     public fragment: Fragment,
+    public mediaQuery: MediaQueryObserver,
+    private _rootHeader: RootHeader,
+    private _rootMain: RootMain,
     @Inject(FIRESTORE) firestore: Firestore,
-    @Inject(RUN_OUTSIDE_NG_ZONE) runOutsideNgZone: RunOutsideNgZone,
-    changeDetectorRef: ChangeDetectorRef
+    changeDetectorRef: ChangeDetectorRef,
+    ngZone: NgZone
   ) {
+    _rootHeader.styling.setTheme('primary');
+    _rootHeader.switchNormalMode();
+    _rootHeader.onMpWrapperClick = () => noop;
+
     const currentData = WORKBOOK_CURRENT_DATA.current;
 
     // "path" と "dataGetter" は直下の条件文で代入される。
     let path: string;
     let dataGetter: {
-      get: (() => Promise<any>) | (() => null);
+      get: (() => Promise<any>) | (() => any);
     };
 
     if (currentData) {
       path = currentData.pathname;
       this.data = currentData;
+
       dataGetter = {
-        get: () => null
+        get: noop
       }; // noop
 
     } else {
@@ -144,139 +143,341 @@ export class WorkbookGameComponent implements OnDestroy {
       dataGetter = firestore.collection('workbook-data').doc(path);
     }
 
-    runOutsideNgZone(() => {
+    this._mediaQueryChangesSubscription =
+      mediaQuery.store.changes.subscribe(changeDetectorRef.markForCheck.bind(changeDetectorRef));
+
+    ngZone.runOutsideAngular(() => {
       Promise.all([
         dataGetter.get(),
         firestore.collection('workbook-quizzes').doc(path).get()
       ]).then(result => {
-        // this.quiz = result[1].data().quiz;
+        const quiz = this.quiz = result[1].data() as Quiz;
 
         // すでに取得しているデータがあるということは "result[0] = null" であることが確定する。
-        const data = this.data || result[0].data() as WorkbookData;
-
-        this.questionOrderIndexesFactory = data.gameType === 'denko'
-          ? createOrderIndexesForDenko
-          : createOrderIndexesForDefault;
+        const workbookData = this.data || (this.data = result[0].data()) as WorkbookData;
 
         this.hasLoaded = false;
 
-        changeDetectorRef.markForCheck();
+        const gamesData = workbookData.games;
+
+        ascIndexSort(gamesData);
+
+        let offset = 0;
+
+        const forLen = gamesData.length;
+        for (let i = 0; i < forLen; i++) {
+          const data = gamesData[i];
+
+          const type = data.type;
+
+          this.localConfig[type] = {
+            disabled: false,
+            random: false
+          };
+
+          const dialogContent = data.dialogContent;
+          if (dialogContent) {
+            this.dialogsData.push({
+              type, content: dialogContent
+            });
+          }
+
+          const length = quiz[type].length;
+
+          this.questionOrderIndexesRef[data.type] = Array.from({ length }, (_, n) => n + offset);
+
+          offset += length;
+          this.gameIdentifiers[i] = [offset - 1, type];
+        }
+
+        _rootHeader.onMpWrapperClick = () => this.fragment.add('playing');
+
+        ngZone.run(() => changeDetectorRef.markForCheck());
       });
     });
 
-    fragment.observe('playing', {
-      onMatch: () => this.play(),
-      onEndMatching: () => this.finish()
+    this.fragment.remove();
+
+    this.fragmentSubscription = fragment.observe('playing', {
+      onMatch: () => {
+        if (this.data) {
+          this._startGame();
+          changeDetectorRef.markForCheck();
+        }
+      },
+      onEndMatching: () => {
+        this._getResults();
+        changeDetectorRef.markForCheck();
+      },
+      pipeParams: [skip(1)]
     });
+  }
+
+  ngOnDestroy(): void {
+    this._rootHeader.styling.setTheme(null);
+    this._rootMain.hasHiddenMpNav = false;
+
+    this.fragmentSubscription.unsubscribe();
+    this._mediaQueryChangesSubscription.unsubscribe();
+
+    WORKBOOK_CURRENT_DATA.current = null;
+
+    this.fragment.remove();
+  }
+
+  startGame(replayOnlyMistakes?: boolean): void {
+    this._startGame = replayOnlyMistakes
+      ? this._replayOnlyMistakes.bind(this)
+      : this._playFromBeginning.bind(this);
+
+    this.fragment.add('playing');
+  }
+
+  private _playFromBeginning(): void {
+    if (this.isPlaying) { return; }
+    this.isPlaying = true;
+
+    const orderIndexes = this.questionOrderIndexes
+      = this.questionOrderIndexesFactory();
+
+    this.questionLength = orderIndexes.length;
+
+    this._initGame();
+  }
+
+  private _replayOnlyMistakes(): void {
+    if (this.isPlaying) { return; }
+    this.isPlaying = true;
+
+    const orderIndexes =
+      this.questionOrderIndexes = this.mistakeQuestionIndexes;
+
+    this.questionLength = orderIndexes.length;
+
+    this._initGame();
+  }
+
+  private _initGame(): void {
+    const counter = this.counter = {
+      total: {
+        answered: 0, // <= nextQuestionを呼び出す際に、この値に１追加するため
+        corrected: 0,
+        mistaken: 0
+      }
+    } as Counter;
+
+    const gamesData = this.gameIdentifiers;
+    const gameDataLen = gamesData.length;
+    for (let i = 0; i < gameDataLen; i++) {
+      counter[gamesData[i][1]] = {
+        answered: 0,
+        corrected: 0,
+        mistaken: 0
+      };
+    }
+
+    this.mistakeQuestionIndexes = [];
+
+    this._nextQuestion();
+
+    const rootHeader = this._rootHeader;
+    rootHeader.switchToolbarMode();
+    rootHeader.styling.setTheme(null);
+    this._rootMain.hasHiddenMpNav = true;
   }
 
   // 答えのボタンを押すと次の
   onClickAnswerButton(answerIndex: number): void {
+    // const answeredIndex = this.currentAnsweredIndex;
     const answeredIndex = this.currentAnsweredIndex;
 
-    const currQues = this.currentQuestion;
-    const correctAnswerIndex = currQues.correctAnswerIndex;
+    const correctAnswerIndex = this.currentQuestion!.correctAnswerIndex;
 
-    // 回答するかどうかを判別
-    if (answeredIndex === 0 || answeredIndex) {
+    if (!(answeredIndex || answeredIndex === 0)) {
+      // まだ回答されていないとき
+      // 順序は、こっちの処理のほうが早く実行される
+      this.currentAnsweredIndex = answerIndex;
+
+      let entryPlayingScreenClass: string;
+
+      const counter = this.counter;
+      counter.total.answered++;
+
+      if (correctAnswerIndex === answerIndex) {
+        // 正解
+        this.playBuzzer.correct();
+
+        counter.total.corrected++;
+        counter[this.currentGameData!.type!].corrected++;
+
+        entryPlayingScreenClass = 'answered correct';
+        this._rootHeader.styling.setTheme('secondary');
+
+      } else {
+        // 不正解
+        this.playBuzzer.mistake();
+
+        counter.total.mistaken++;
+        counter[this.currentGameData!.type!].mistaken++;
+
+        entryPlayingScreenClass = 'answered mistake';
+        this._rootHeader.styling.setTheme('warn');
+
+        const currIndex = this.questionOrderIndexes[counter.total.answered];
+        this.mistakeQuestionIndexes.push(currIndex);
+      }
+
+      this.playingScreenClass =
+        entryPlayingScreenClass + ' correct-' + correctAnswerIndex;
+
+    } else {
       // 回答してあるとき
 
       // 押されたボタンが答えのボタンか判別する
       if (correctAnswerIndex === answerIndex) {
-        this.questionLength === this.counter.answered + 1
-          ? this.finish()
-          : this.nextQuestion();
+        this.questionLength === this.counter.total.answered
+          ? this._finishQuestion()
+          : this._nextQuestion();
       }
-    } else {
-      // 回答されていないとき
-      this.currentAnsweredIndex = answerIndex;
-
-      let entryPlayingDisplayClass: string;
-      if (correctAnswerIndex === answerIndex) {
-        // 正解
-        entryPlayingDisplayClass = 'answered correct';
-        this.counter.correctCount++;
-        this.playBuzzer.correct();
-
-      } else {
-        // 不正解
-        entryPlayingDisplayClass = 'answered mistake';
-        this.counter.mistakeCount++;
-        this.mistakeQuestionIndexes.push(currQues.index);
-        this.playBuzzer.mistake();
-
-      }
-
-      this.playingDisplayClass =
-        entryPlayingDisplayClass + ' correct-' + correctAnswerIndex;
     }
   }
 
-  start(): void {
-    this.counter = {
-      answered: -1, // <= nextQuestionを呼び出す際に、この値に１追加するため
-      correctCount: 0,
-      mistakeCount: 0
-    };
-    this.mistakeQuestionIndexes = [];
+  private _nextQuestion(): void {
+    this.playingScreenClass = '';
+    this._rootHeader.styling.setTheme(null);
 
-    this.nextQuestion();
-    this.display = 'playing';
-  }
+    const answeredCount = this.counter.total.answered;
+    this.shadeAnsweredCount = answeredCount + 1;
 
-  play(): void {
-    const orderIndexes = this.questionOrderIndexes
-      = this.questionOrderIndexesFactory(this.config);
+    let nextIndex = this.questionOrderIndexes[answeredCount];
 
-    this.questionLength = orderIndexes.length;
+    const identifiers = this.gameIdentifiers;
+    const maxLen = identifiers.length - 1;
 
-    this.start();
-  }
+    let count = 0;
+    while (count < maxLen) {
+      const _id = identifiers[count];
 
-  replayOnlyMistakes(): void {
-    // 重複した値を削除する
-    const mistakes = this.mistakeQuestionIndexes;
-    const orderIndexes = (this.questionOrderIndexes =
-      mistakes.filter((val, i) => i === mistakes.indexOf(val)));
+      if (nextIndex <= _id[0]) {
+        break;
+      }
 
-    this.questionLength = orderIndexes.length;
+      count++;
+    }
 
-    this.start();
-  }
+    const id = identifiers[count];
+    const prevId = identifiers[count - 1];
+    if (prevId) {
+      nextIndex = nextIndex - prevId[0] - 1;
+    }
 
-  nextQuestion(): void {
-    this.playingDisplayClass = '';
-    const quesOrderIndexes = this.questionOrderIndexes;
-
-    const answeredCount = (this.counter.answered += 1);
-
-    this.currentQuestion = this.quiz[quesOrderIndexes[answeredCount]];
+    this.currentGameData = this.data.games[count];
+    this.currentQuestion = this.quiz[id[1]][nextIndex];
     this.currentAnsweredIndex = null;
   }
 
-  finish(): void {
+  private _finishQuestion(): void {
     if (this.config.repeatCount >= this.repeatedCount) {
       this.repeatedCount++;
-      this.play();
+      this._playFromBeginning();
 
     } else {
-      this.currentQuestion = null;
-      this.currentAnsweredIndex = null;
-      this.display = 'result';
+      this._getResults();
     }
   }
 
-  ngOnDestroy(): void {
-    WORKBOOK_CURRENT_DATA.current = undefined;
+  private _getResults(): void {
+    if (!this.isPlaying) { return; }
+    this.isPlaying = false;
+
+    this._startGame = this._playFromBeginning.bind(this);
+    this.fragment.remove();
+
+    this.currentQuestion = null;
+    this.currentAnsweredIndex = null;
+    this.currentGameData = null;
+
+    const rootHeader = this._rootHeader;
+    rootHeader.switchNormalMode();
+    rootHeader.styling.setTheme('accent');
+    this._rootMain.hasHiddenMpNav = false;
+
+    this.isPlaying = false;
+  }
+
+  questionOrderIndexesFactory(): number[] {
+    const gamesData = this.data.games;
+
+    const conf = this.config;
+
+    let entryIndexes: number[] = [];
+
+    if (conf.mix) {
+      const len = gamesData.length;
+      for (let i = 0; i < len; i++) {
+        const type = gamesData[i].type;
+
+        if (!this.localConfig[type].disabled) {
+          entryIndexes = entryIndexes.concat(this.questionOrderIndexesRef[type]);
+        }
+      }
+
+      return shuffleArray(entryIndexes);
+
+
+    } else {
+      const len = gamesData.length;
+      for (let i = 0; i < len; i++) {
+        const type = gamesData[i].type;
+
+        const localConf = this.localConfig[type];
+        if (!localConf.disabled) {
+          const indexes = this.questionOrderIndexesRef[type];
+          const v = localConf.random ? shuffleArray(indexes) : indexes;
+          entryIndexes = entryIndexes.concat(v);
+        }
+      }
+
+      return entryIndexes;
+    }
+  }
+
+  setSound(isEnable: boolean): void {
+    this.playBuzzer = isEnable
+      ? playBuzzer
+      : noopBuzzer;
+  }
+
+  onChangeDisabledConfig(event: MlSlideToggleChange, type: string): void {
+    const localConfig = this.localConfig;
+    this.localConfig[type].disabled = event.checked;
+
+    this.gameIdentifiers.every(id => localConfig[id[1]].disabled)
+      ? this._rootHeader.styling.setTheme('disabled')
+      : this.counter
+        ? this._rootHeader.styling.setTheme('accent')
+        : this._rootHeader.styling.setTheme('primary');
   }
 }
 
+function shuffleArray([...array]: any[]): number[] {
+  for (let i = array.length - 1; i >= 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array;
+}
 
 interface PlayBuzzer {
-  correct: () => Promise<void>;
-  mistake: () => Promise<void>;
+  correct: () => any;
+  mistake: () => any;
 }
 const playBuzzer: PlayBuzzer = {} as any;
+const noopBuzzer: PlayBuzzer = {
+  correct: noop,
+  mistake: noop
+};
 
 /** [開始] playBuzzerへの代入処理 */
 let _buzzer = new Audio('../../../../assets/correct-buzzer.mp3');
@@ -285,57 +486,6 @@ playBuzzer.correct = _buzzer.play.bind(_buzzer);
 _buzzer = new Audio('../../../../assets/mistake-buzzer.mp3');
 playBuzzer.mistake = _buzzer.play.bind(_buzzer);
 
-_buzzer = null;
+_buzzer = null!;
 /** [終了] playBuzzerへの代入処理 */
-
-function shuffleArray(array: any[]): void {
-  for (let i = array.length - 1; i >= 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
-function createOrderIndexesForDenko(config: GameConfigForDenko): number[] {
-  let entry: number[];
-
-  if (config.mix) {
-    // tslint:disable-next-line:max-line-length
-    entry = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49];
-    shuffleArray(entry);
-
-  } else {
-    const generalConf = config.general;
-    if (generalConf.disabled) {
-      entry = [];
-    } else {
-      entry = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
-      if (generalConf.random) {
-        shuffleArray(entry);
-      }
-    }
-
-    const wdConf = config.wiringDiagram;
-    if (!wdConf.disabled) {
-      const _arr = [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49];
-      if (wdConf.random) {
-        shuffleArray(_arr);
-      }
-
-      entry.concat(_arr);
-    }
-
-  }
-
-  return entry;
-}
-
-function createOrderIndexesForDefault(config: GameConfigForDefault): number[] {
-  const entry = [...Array(60).keys()];
-
-  if (config.random) {
-    shuffleArray(entry);
-  }
-
-  return entry;
-}
 

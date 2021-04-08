@@ -10,3 +10,5 @@ export const FIRESTORE = new InjectionToken('Firestore DI', {
   providedIn: 'root',
   factory: () => store
 });
+
+

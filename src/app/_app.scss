@@ -1,0 +1,76 @@
+@import '@material-lite/angular/theming';
+
+$app-light-theme: ml-template-theme(light);
+$app-light-palette:
+  ml-create-palette((
+    accent: (
+      color: #009688,
+      contrast: #fff
+    )
+  ), deepPurple-amber);
+
+$app-dark-theme: ml-template-theme(dark);
+$app-dark-palette: ml-template-palette(deepPurple-amber);
+
+
+@mixin app-theme($prop, $arg, $opacity: null) {
+
+  @if $opacity != null {
+    #{$prop}: rgba(map-get($app-light-theme, $arg), $opacity);
+    .dark-theme & {
+      #{$prop}: rgba(map-get($app-dark-theme, $arg), $opacity);
+    }
+  } @else {
+    #{$prop}: map-get($app-light-theme, $arg);
+    .dark-theme & {
+      #{$prop}: map-get($app-dark-theme, $arg);
+    }
+  }
+}
+
+@mixin app-palette($prop, $arg, $opacity: null) {
+
+  @if $opacity != null {
+    #{$prop}: rgba(map-get($app-light-palette, $arg), $opacity);
+    .dark-theme & {
+      #{$prop}: rgba(map-get($app-dark-palette, $arg), $opacity);
+    }
+  } @else {
+    #{$prop}: map-get($app-light-palette, $arg);
+    .dark-theme & {
+      #{$prop}: map-get($app-dark-palette, $arg);
+    }
+  }
+}
+
+@mixin app-border($prop: 1px solid) {
+  border: $prop map-get($app-light-theme, divider);
+  .dark-theme & { border: $prop map-get($app-dark-theme, divider); }
+}
+
+@mixin app-card($z-index: 2, $radius: 4px) {
+  z-index: $z-index;
+  @include ml-elevation($z-index);
+  @include app-theme(background-color, primaryContainer);
+
+  border-radius: $radius;
+}
+
+$mp-header-width: 96%;
+
+$mp-normal-header-height: 48px;
+$mp-normal-header-vertical-margin: 16px; 
+
+$mp-toolbar-header-height: 40px;
+$mp-toolbar-header-top: 0;
+
+$mp-searching-header-view-height: 100vh;
+$mp-searching-header-content-height: 48px;
+$mp-searching-header-vertical-margin: 0;
+
+$pc-header-height: 64px;
+$pc-header-vertical-margin: 0;
+$pc-header-width: 100%;
+
+$pc-nav-width: 64px;
+$mp-nav-height: 48px;

@@ -1,24 +1,41 @@
 import {
-  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject,
-  NgZone,
-  OnDestroy, OnInit, TemplateRef, ViewChild, ViewEncapsulation
+  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Inject,
+  NgZone, OnDestroy, TemplateRef, ViewChild, ViewEncapsulation
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { noop } from '@material-lite/angular-cdk/utils';
 import { unigramFactory } from 'src/app/common/ngram-factory';
-import { RootHeaderElement, RootHeaderEvents } from 'src/app/root-header.service';
+import { RootHeader } from 'src/app/root-header.service';
+import { RootMain } from 'src/app/root-main.service';
 import { Firestore, FIRESTORE } from 'src/app/service/firestore';
+import { Fragment } from 'src/app/service/fragment';
 import { ListDataSession } from 'src/app/service/list-data-session';
 import { WorkbookData, WORKBOOK_CURRENT_DATA } from '../workbook';
 
 @Component({
-  selector: 'app-list',
+  selector: 'app-workbook-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None
 })
-export class WorkbookListComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('rootHeaderContent', { static: true }) private _rootHeaderContent: TemplateRef<any>;
+export class WorkbookListComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('rootHeaderContent', { static: true })
+  set setRootHeaderContent(templateRef: TemplateRef<any>) {
+    this._rootHeader.content = templateRef;
+  }
+
+  @ViewChild('rootHeaderInput') set setRootHeaderInputRef(elementRef: ElementRef<HTMLInputElement>) {
+    if (!elementRef) { return; }
+
+    this._rootHeaderInputRef = elementRef;
+
+    if (this._fragment.value === 'searching') {
+      elementRef.nativeElement.focus();
+      elementRef.nativeElement.tabIndex = 0;
+    }
+  }
+  private _rootHeaderInputRef?: ElementRef<HTMLInputElement>;
 
   searchWords: string[];
 
@@ -26,24 +43,27 @@ export class WorkbookListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     public router: Router,
-    private _rootHeaderEvents: RootHeaderEvents,
-    private _rootHeaderElement: RootHeaderElement,
-    _changeDetection: ChangeDetectorRef,
+    private _rootHeader: RootHeader,
+    private _fragment: Fragment,
     ngZone: NgZone,
+    _changeDetection: ChangeDetectorRef,
     @Inject(FIRESTORE) _firestore: Firestore,
   ) {
     const session = this.listDataSession =
       new ListDataSession('workbook-data', _firestore, ngZone, _changeDetection);
 
     session.getAllListData();
+      // .then(() => {
+      //   rootChangeDetector.ref.markForCheck();
+      // });
 
-    _rootHeaderEvents.subscribeSearchingFragmentObserver();
-  }
+    _rootHeader.switchNormalMode();
 
-  ngOnInit(): void {
-    this._rootHeaderElement.content = this._rootHeaderContent;
-    // setTimeout(() => this._rootHeaderContent = this._rootHeaderContent);
-    // rootChangeDetector.ref.markForCheck();
+    _rootHeader.onMpWrapperClick = noop;
+
+    _rootHeader.subscribeSearchingFragmentObserver(
+      this.focusInput.bind(this), this.distractInput.bind(this)
+    );
   }
 
   ngAfterViewInit(): void {
@@ -51,27 +71,47 @@ export class WorkbookListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this._rootHeaderEvents.unsubscribeSearchingFragmentObserver();
-    this._rootHeaderContent = null;
+    this._rootHeader.unsubscribeSearchingFragmentObserver();
   }
 
   gotoGame(event: PointerEvent, data: WorkbookData): void {
+    if (data.disabled) { return; }
+
     const path = 'workbook-game/' + data.pathname;
 
     if (event.which === 2) {
-      open('elextbook.web.app/' + path);
+      open('https://elextbook.web.app/' + path);
+      return;
     }
 
     WORKBOOK_CURRENT_DATA.current = data;
     this.router.navigate([path]);
   }
 
-  onEntrySearchBar(event): void {
-    const val = event.target.value;
+  onEntrySearchBar(event: any): void {
+    this._fragment.remove();
+
+    const val = event.target.value as string;
     const words = this.searchWords = unigramFactory(val);
 
     words[0]
       ? this.listDataSession.getSearchedListData(words)
       : this.listDataSession.getAllListData();
+  }
+
+  focusInput(): void {
+    const elRef = this._rootHeaderInputRef;
+    if (!elRef) { return; }
+
+    elRef.nativeElement.focus();
+    elRef.nativeElement.tabIndex = 0;
+  }
+
+  distractInput(): void {
+    const elRef = this._rootHeaderInputRef;
+    if (!elRef) { return; }
+
+    elRef.nativeElement.blur();
+    elRef.nativeElement.tabIndex = -1;
   }
 }

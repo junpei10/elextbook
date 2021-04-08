@@ -1,27 +1,46 @@
 <section class="workbook-list-section" *ngFor="let category of listDataSession.categories">
   <h1 class="workbook-list-category">{{ category }}</h1>
-  <div class="workbook-list-links">
-    <div mlRipple class="workbook-list-link" *ngFor="let data of listDataSession.value[category]" (pointerup)="gotoGame($event, data)">
-      <div class="workbook-list-link-left-content" [style.background-color]="data.theme">
-        <h2 class="workbook-list-short-title">{{ data.shortTitle }}</h2>
+  <div class="workbook-list-cards">
+    <div
+      mlRipple
+      class="workbook-list-card"
+      *ngFor="let data of listDataSession.value[category]"
+      (pointerup)="gotoGame($event, data)"
+      [class.disabled]="data.disabled"
+    >
+      <div class="workbook-list-card-top">
+        <h2 class="workbook-list-card-heading">{{ data.title }}</h2>
       </div>
-      <div class="workbook-list-link-right-content">
-        <span>{{ data.title }}</span>
-        <!-- <span>{{ data.gameType }}</span> -->
+      <div class="workbook-list-card-bottom">
+        <div class="workbook-list-card-thumbnail" [style.background-color]="data.theme">
+          <h2 class="workbook-list-card-thumbnail-content" [innerHTML]="data.thumbnail"></h2>
+        </div>
+        <div class="workbook-list-card-desc-container ml-hint">
+          <span class="workbook-list-card-desc">{{ data.desc }}</span>
+          <div class="workbook-list-card-tags">
+            <span class="workbook-list-card-tag" *ngFor="let gameData of data.games">{{ gameData.name }}</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="workbook-list-empty-link"></div>
-    <div class="workbook-list-empty-link"></div>
+    <div class="workbook-list-empty-box"></div>
+    <div class="workbook-list-empty-box"></div>
   </div>
 </section>
 
 <app-not-matched *ngIf="listDataSession.notMatched"></app-not-matched>
 
 <ng-template #rootHeaderContent>
-  <div class="root-header-content">
-    <input (change)="onEntrySearchBar($event)" />
-    <div class="root-header-content-right root-header-content-not-transparent">
-      <!-- <button mlButton (click)="test()">Add "Searching" fragment</button> -->
+  <div class="workbook-list-root-header-content">
+    <input #rootHeaderInput placeholder="Search" type="text" class="workbook-list-root-header-input" (change)="onEntrySearchBar($event)" />
+    <div mlRipple class="workbook-list-root-header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path
+          d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+        />
+      </svg>
     </div>
+    <!-- <button mlButton (click)="test()">Add "Searching" fragment</button> -->
   </div>
 </ng-template>

@@ -1,1 +1,51 @@
-<h1 style="text-align: center">HOME</h1>
+<section class="home-first-view" #firstView>
+  <div class="home-first-view-mask" [class.loaded-image]="hasLoadedFirstViewImage"></div>
+  <div class="home-first-view-content">
+    <h1 class="home-first-view-heading">Elextbook</h1>
+    <span class="home-first-view-divider"></span>
+    <div class="home-first-view-catch"><h2>Catch copy</h2></div>
+  </div>
+</section>
+
+<section *ngIf="!isPwa" class="home-pwa">
+  <div class="home-pwa-main">
+    <h2 class="home-pwa-heading">アプリとしてインストールする</h2>
+    <h3 class="home-pwa-subheading">通常のWebより高速にアクセスでき、一度遊んだゲームは、オフラインで遊ぶことが可能になります。</h3>
+
+    <div class="home-pwa-button-container">
+      <button
+        mlButton
+        *ngIf="beforeInstallPromptSupported"
+        (click)="installPwa()"
+        theme="accent"
+        variant="raised"
+        [disabled]="installButtonIsDisabled"
+        class="home-pwa-button"
+      >
+        {{ installButtonIsDisabled ? 'インストール準備中' : 'インストール' }}
+      </button>
+      <button mlButton (click)="openGuidDialog()" theme="primary" variant="raised" class="home-pwa-button">導入方法の確認</button>
+    </div>
+
+    <div class="home-pwa-comment ml-hint">
+      <div style="white-space: nowrap">
+        <span>推奨ブラウザ</span>
+        <span>主な対応ブラウザ</span>
+      </div>
+      <div>
+        <span>：&emsp;Chrome, Edge</span>
+        <span>：&emsp;Chrome, Safari, Firefox, Edge</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-pwa-sub">
+    <svg class="home-pwa-img" xmlns="http://www.w3.org/2000/svg" width="160px" height="160px" viewBox="0 0 453.54 570.65" xmlns:v="https://vecta.io/nano">
+      <path
+        d="M28.41 570.65C12.723 570.633.011 557.917 0 542.23V63.93C.039 28.638 28.638.039 63.93 0H441.7c6.537.006 11.834 5.303 11.84 11.84v499.61c-.006 6.537-5.303 11.834-11.84 11.84h-12.42c-6.537-.006-11.834-5.303-11.84-11.84V39.18a7.1 7.1 0 0 0-7.11-7.11H64.83c-11.167.142-20.142 9.242-20.13 20.41.011 11.113 9.017 20.119 20.13 20.13h315.65a11.78 11.78 0 0 1 10.71 11.72v474.48c-.011 6.534-5.306 11.829-11.84 11.84z"
+        fill="#9c27b0"
+      ></path>
+      <path d="M226.29 151.56L94.75 367.09h98.36l-16.46 142.83 131.54-215.54h-98.33l16.43-142.82z" fill="#ffeb3b" fill-rule="evenodd"></path>
+    </svg>
+  </div>
+</section>

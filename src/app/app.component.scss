@@ -1,274 +1,378 @@
 @import '@material-lite/angular/theming';
 @import './service/media-query/_media-query.sass';
+@import './app';
 
-$mp-normal-header-pane-height: 72px;
+// Mobile first
+// 極力 `@include mp` は使わないように
 
-$mp-normal-header-height: 48px;
-$mp-normal-header-top: ($mp-normal-header-pane-height - $mp-normal-header-height) / 2;
+app-root {
+  display: block;
+}
 
-$mp-resting-header-height: 40px;
-$mp-resting-header-top: 0;
-
-$pc-header-height: 64px;
+$pc-nav-elevation-level: 4;
 
 .root-header {
-  &-pane {
-    pointer-events: none;
-    position: relative;
-    z-index: 1;
+  background-color: transparent;
 
-    width: 100%;
-    background-color: transparent;
+  height: $mp-normal-header-height + ($mp-normal-header-vertical-margin * 2);
+  top: 0;
+
+  &-toolbar {
+    height: $mp-toolbar-header-height;
+  }
+
+  @include pc {
+    height: $pc-header-height;
+  }
+
+  &-view {
+    position: fixed;
+    // top: any;
+    left: 0;
+    right: 0;
+    margin: auto;
+    
+    width: $mp-header-width;
+    border-radius: 8px;
+
+    z-index: 9; // 8
+    @include ml-elevation(8);
+    
+    @include app-theme(background-color, primaryContainer);
+
+    .ml-disabled & {
+      pointer-events: none;
+      @include app-theme(background-color, disabledContainer);
+      @include app-theme(color, disabledText);
+    }
+
+    .ml-secondary & {
+      background-color: #8BC34A;
+      color: white;
+    }
+
+    .ml-warn & {
+      $palette: map-get($app-light-palette, warn);
+      background-color: map-get($palette, color);
+      color: map-get($palette, contrast);
+    }
+
+    @include pc {
+      will-change: background-color;
+      transition: ml-create-transition(background-color, normal, angular);
+    }
+
+    @include mp {
+      perspective: 1000px; // will-change: background-color, border-box, transform, top, height, width;
+      transition: ml-create-transition(all, very-slow, angular);
+      // transition-property: background-color, border-box, top, height, width;
+      // transition-duration: 240ms, 280ms, 400ms, 400ms, 400ms;
+      // transition-timing-function: map-get($ml-animation-function, angular);
+
+      @each $name, $value in $app-light-palette {
+        @if ($name == primary or $name == accent) {
+          .ml-#{$name} & {
+            background-color: map-get($value, color);
+            color: map-get($value, contrast);
+          }
+        }
+      }
+
+      @each $name, $value in $app-dark-palette {
+        @if ($name == primary or $name == accent) {
+          .dark-theme .ml-#{$name} & {
+            background-color: map-get($value, color);
+            color: map-get($value, contrast);
+          }
+        }
+      }
+
+      height: $mp-normal-header-height;
+      top: $mp-normal-header-vertical-margin;
+
+      .root-header-toolbar & {
+        height: $mp-toolbar-header-height;
+        top: $mp-toolbar-header-top;
+        width: 100%;
+        border-radius: 0;
+
+        @include ml-elevation(2);
+      }
+
+      .root-header-searching & {
+        height: $mp-searching-header-view-height;
+        top: $mp-searching-header-vertical-margin;
+        width: 100%;
+        border-radius: 0;
+
+        .ml-ripple-element {
+          opacity: 0 !important;
+        }
+      }
+    }
 
     @include pc {
       height: $pc-header-height;
-      z-index: 4;
-    }
+      width: $pc-header-width;
+      top: $pc-header-vertical-margin;
 
-    @include mp {
-      height: $mp-normal-header-pane-height;
-      z-index: 8;
+      border-radius: 0;
+
+      z-index: 25; // 24 + 1 - navとかぶらないように
+      @include ml-elevation($pc-nav-elevation-level);
     }
+    // toolbar とかの高さは上のほうで記入済み
   }
 
-  &-wrapper {
-    pointer-events: auto;
-    position: relative;
-    background: white;
-
-    @include pc {
-      @include ml-elevation(4);
-    }
-
-    @include mp {
-      will-change: height, width, top;
-      transition-property: height, width, top;
-      transition-duration: 400ms;
-      transition-timing-function: map-get($ml-animation-function, angular);
-
-      width: 96%;
-      height: 48px;
-      position: fixed;
-      top: $mp-normal-header-top;
-      left: 0;
-      right: 0;
-      margin: 0 auto;
-
-      @include ml-elevation(8);
-      border-radius: 8px;
-    }
-  }
+  // -contents
+  //   - left -> center -> right => wrapper
 
   &-contents {
-    @include mp {
-      height: $mp-normal-header-height;
-    }
-    @include pc {
-      height: $pc-header-height;
-    }
-
-    position: relative;
-    display: flex;
-  }
-
-  // Common to children components
-  &-content {
-    height: 100%;
-    width: 100%;
     display: flex;
     align-items: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-height: $mp-searching-header-content-height;
 
+    @include pc {
+      max-height: 100%;
+    }
+  }
+
+  &-left-container {
+    z-index: 2;
+  }
+
+  &-center-container {
+    position: relative;
+    flex: 1;
+    height: 100%;
+    z-index: 0;
+
+    pointer-events: none;
+    .root-header-searching & {
+      pointer-events: auto;
+    }
+
+    @include pc {
+      pointer-events: auto;
+    }
+  }
+
+  &-center-content {
     &-enter-active,
     &-leave-active {
-      transition: opacity 280ms;
+      transition: ml-opacity-transition();
     }
 
     &-enter,
     &-leave-to {
-      opacity: 0;
       position: absolute;
-
-      @include mp {
-        left: 72px;
-      }
-
-      @include pc {
-        left: 64px;
-      }
+      top: 0;
+      left: 0;
+      opacity: 0;
     }
   }
 
-  &-common-button {
-    @include mp {
-      position: relative;
-      min-width: 40px;
-      z-index: 1;
-      margin: auto 16px;
-      font-size: 24px;
+  &-right-container {
+    z-index: 2;
 
-      svg {
-        height: 24px;
-        width: 24px;
-      }
+    &-button {
+      margin: 0 8px;
     }
+  }
+
+  &-wrapper {
+    position: absolute !important;
+    z-index: 1;
+    width: 100%; height: 100%;
+
+    .root-header-toolbar &, .root-header-searching & {
+      display: none;
+    }
+  }
+
+  // left-container
+  &-main-action-button {
+    // 大きさはデフォルト
+    margin: 0 8px;
+    font-size: 24px;
 
     @include pc {
       width: 64px;
-      height: 64px;
-      font-size: 24px;
+      height: 64px !important;
+      margin: 0;
     }
   }
 
-  &-content-not-transparent {
-    @include mp {
-      position: relative;
-      z-index: 1;
-    }
-  }
-
-  &-ripple {
-    width: 100%;
-    height: 100%;
+  &-backing-icon, &-drawer-icon {
     position: absolute;
-    top: 0;
-  }
-
-  &-predictive-candidates {
+    width: 24px; height: 24px;
     opacity: 0;
-    transition: opacity 400ms map-get($ml-animation-function, angular);
+    transform: rotate(-180deg);
+    transition-property: opacity, transform;
+    transition-duration: map-get($ml-animation-duration, slow);
+    transition-timing-function: map-get($ml-animation-function, angular);
+
+    @include pc {
+      width: 32px;
+      height: 32px;
+    }
   }
 
-  &-searching & {
-    &-wrapper {
-      height: 100vh;
-      width: 100%;
-      top: 0;
+  &-backing-type &-backing-icon, &-drawer-type &-drawer-icon {
+    opacity: 1;
+    transform: rotate(0);
+  }
+
+}
+
+.root-main {
+  position: relative;
+  box-sizing: border-box;
+
+  @include pc {
+    padding-left: $pc-nav-width;
+  }
+}
+
+.root-nav {
+  height: 100%;
+  display: flex;
+  position: fixed;
+  @include app-theme(background-color, primaryContainer);
+
+  z-index: 8;
+  @include ml-elevation(8);
+
+  top: unset;
+  bottom: 0;
+
+  width: 100%;
+  height: $mp-nav-height;
+
+  @include pc {
+    width: $pc-nav-width;
+    height: 100%;
+
+    top: 0;
+    left: 0;
+    bottom: unset;
+
+    flex-direction: column;
+
+    z-index: 24;
+    @include ml-elevation($pc-nav-elevation-level);
+
+    // Header分開ける
+    padding-top: $pc-header-height + $pc-header-vertical-margin;
+  }
+
+  @include mp {
+    transform: translateY(0);
+
+    &-mp-hidden {
+      transform: translateY(100%);
+    }
+  }
+
+  &-button {
+    width: 100%;
+    height: 100% !important;
+
+    @include pc {
+      // 正方形
+      height: $pc-nav-width !important;
+
+      padding: 0;
+      border-radius: 0;
     }
 
-    &-ripple {
-      z-index: -1;
+    &-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-      .ml-ripple-element {
-        opacity: 0 !important;
+    &-icon {
+      width: 24px;
+      height: 24px;
+      @include pc {
+        width: 32px;
+        height: 32px;
       }
     }
 
-    &-predictive-candidates {
+    &-heading {
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1;
+      margin-top: 4px;
+
+      @include pc {
+        display: none;
+      }
+    }
+  }
+
+  &-straight-tracker .ml-tracker {
+    transition-duration: 400ms;
+
+    @include mp {
+      will-change: left;
+      transition-property: left;
+    }
+
+    @include pc {
+      will-change: top;
+      transition-property: top;
+    }
+  }
+
+  &-ink-bar {
+    height: 2px;
+    width: 100%;
+
+    @include pc {
       height: 100%;
-      opacity: 1;
-      border-top: 1px solid rgba(0, 0, 0, 0.24);
+      width: 2px;
     }
   }
 }
 
-.root-main {
-  display: flex;
-
-  @include mp {
-    flex-direction: column;
+@keyframes enterRootDrawerPaneAnimation {
+  0% {
+    background-color: rgba(0,0,0,0);
   }
-
-  @include pc {
-    min-height: calc(100vh - #{$pc-header-height});
+  100% {
+    background-color: rgba(0,0,0,.56);
   }
-
-  &-component-outlet {
-    width: 100%;
-
-    & > * {
-      display: block;
-    }
+}
+@keyframes leaveRootDrawerPaneAnimation {
+  0% {
+    background-color: rgba(0,0,0,.56);
   }
+  100% {
+    background-color: rgba(0,0,0,0);
+  }
+}
 
-  &-nav {
-    display: flex;
-    background: white;
+@keyframes enterRootDrawerContentAnimation {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
 
-    @include pc {
-      position: relative;
-      flex-direction: column;
-      order: -1;
-      z-index: 3;
-      @include ml-elevation(4);
-
-      .ml-button {
-        width: 64px;
-        height: 64px;
-        padding: 0;
-        border-radius: 0;
-      }
-    }
-
-    @include mp {
-      position: fixed;
-      top: unset;
-      bottom: 0;
-      height: fit-content;
-      width: 100%;
-
-      z-index: 8;
-      @include ml-elevation(8);
-
-      .ml-button {
-        width: 100%;
-        height: 40px;
-      }
-    }
-
-    &-straight-tracker .ml-tracker {
-      @include mp {
-        will-change: left;
-        transition-property: left;
-        transition-duration: 400ms;
-      }
-
-      @include pc {
-        will-change: top;
-        transition-property: top;
-        transition-duration: 400ms;
-      }
-    }
-
-    &-ink-bar {
-      @include mp {
-        height: 2px;
-        width: 100%;
-      }
-
-      @include pc {
-        height: 100%;
-        width: 2px;
-      }
-    }
-
-    &-button-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-
-      @include pc {
-        span {
-          display: none;
-        }
-
-        svg {
-          width: 32px;
-          height: 32px;
-        }
-      }
-
-      @include mp {
-        span {
-          font-size: 10px;
-          font-weight: 500;
-          line-height: 1;
-        }
-        svg {
-          width: 24px;
-          height: 24px;
-        }
-      }
-    }
+@keyframes leaveRootDrawerContentAnimation {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
   }
 }
 
@@ -277,17 +381,105 @@ $pc-header-height: 64px;
   &-pane {
     position: fixed;
     top: 0;
-    width: 80%;
-    max-width: 400px;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: 16;
+
+    @include pc {
+      z-index: 2;
+    }
+
+    will-change: animation, background-color;
+
+    animation: ml-create-transition(enterRootDrawerPaneAnimation, slow, angular);
+    animation-fill-mode: forwards;
+
+    &.leave-to {
+      animation: ml-create-transition(leaveRootDrawerPaneAnimation, slow, angular);
+    }
   }
 
   &-content {
+    height: 100%;
+
+    @include ml-elevation(16);
+
+    will-change: animation, transform;
+
     width: 80%;
-    max-width: 800px;
-    min-width: 360px;
+    max-width: 480px;
+    min-width: auto;
+
+    @include pc {
+      display: inline-block;
+      width: auto;
+      margin-top: $pc-header-height;
+      margin-left: $pc-header-height;
+    }
+
+    @include app-theme(background-color, primaryContainer);
+
+    transform: translateX(-100%);
+
+    animation: ml-create-transition(enterRootDrawerContentAnimation, slow, angular);
+    animation-fill-mode: forwards;
+
+    .leave-to & {
+      animation: ml-create-transition(leaveRootDrawerContentAnimation, slow, angular);
+    }
   }
 
+  &-pc {
+    &-name-buttons {
+      display: inline-flex;
+      flex-direction: column;
+    }
+
+    &-button {
+      justify-content: left !important;
+      font-weight: 500;
+      font-size: 20px;
+      padding: 0 40px !important;
+      height: $pc-header-height !important;
+    }
+  }
+
+  &-mp {
+    &-header {
+      padding: 16px 16px 0;
+      h1 { margin: 0; }
+    }
+
+    &-divider {
+      display: block;
+      height: 2px;
+      width: 100%;
+      margin: 16px 0;
+
+      @include app-theme(background-color, divider);
+    }
+
+    &-section {
+      display: flex;
+      flex-direction: column;
+
+      &-title {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0 0 8px 16px;
+      }
+
+      &-button {
+        width: 100%;
+        padding-left: 32px !important;
+        padding-right: 0 !important;
+        justify-content: left !important;
+      }
+    }
+  }
   // transform: translateX(-100%);
 }
+
+// .stopped-route-animation + .ng-animating {
+//   display: none !important;
+// }

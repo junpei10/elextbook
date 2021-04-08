@@ -1,73 +1,187 @@
 @import '../../../service/media-query/media-query';
+@import '../../../app';
+
+$list-size-bp: 960px;
+$list-card-max-width: 460px;
+
+app-workbook-list {
+  display: block;
+  padding-bottom: 160px;
+}
 
 .workbook-list {
   &-section {
-    margin: 32px 0;
+    box-sizing: border-box;
+    padding-top: 16px;
+  }
+
+  &-root-header {
+    &-content {
+      width: 100%;
+      height: 100%;
+
+      @include pc {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        left: 0 !important;
+      }
+    }
+
+    &-input {
+      color: inherit;
+      outline: none;
+      line-height: normal;
+      border: none;
+      box-shadow: none;
+
+      font-weight: 400;
+
+      &::placeholder {
+        color: currentColor;
+        opacity: 0.56;
+        font-weight: 500;
+      }
+
+      @include mp {
+        background-color: transparent;
+        font-size: 18px;
+        width: 100%;
+        height: 100%;
+      }
+
+      @include pc {
+        width: 50%;
+        height: 50%;
+        max-width: 800px;
+        padding: 0 16px;
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+
+        @include app-theme(background-color, tertiaryContainer);
+      }
+    }
+
+    &-icon {
+      height: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 48px;
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+
+      @include mp {
+        display: none;
+      }
+
+      @include app-theme(background-color, disabledContainer);
+    }
   }
 
   &-category {
     font-size: 16px;
-    margin: 0 8px 8px;
+    margin: 0 32px 16px;
   }
 
-  &-links {
+  &-cards {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-evenly;
   }
 
-  &-link {
+  &-card {
     display: flex;
+    flex-direction: column;
+    align-items: baseline;
+    padding: 16px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
 
-    margin: 0 16px;
-    height: 96px;
-    border-bottom: solid 1px black;
+    @include app-card();
 
-    @include max-width-bp(944px) {
-      width: 100%;
-      margin: 0px;
+    width: 100%;
+    max-width: $list-card-max-width;
+
+    @include max-width-bp($list-size-bp) {
+      max-width: 100%;
+      margin: 0 8px 8px;
     }
 
-    &-left-content {
-      display: flex;
-      height: 100%;
-      min-width: 96px;
-      max-width: 96px;
-      color: white;
+    &-top {
+      height: auto;
+      margin-bottom: 16px;
     }
+    &-heading {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 1px;
+      font-weight: 500;
 
-    &-right-content {
-      height: 100%;
-      width: 344px;
-      padding: 8px;
-      box-sizing: border-box;
-
-      @include max-width-bp(944px) {
-        width: 100%;
+      color: #039BE5;
+      .dark-theme & {
+        color: #00BCD4
       }
     }
-  }
 
-  &-empty-link {
-    width: 472px;
-    @include max-width-bp(944px) {
+    &-bottom {
+      display: flex;
+      height: 100%;
       width: 100%;
+    }
+
+    &-thumbnail {
+      height: 80px;
+      width: 80px;
+      margin-right: 16px;
+      border-radius: 4px;
+
+      &-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        margin: 0;
+        height: 100%;
+        text-align: center;
+
+        color: white;
+        line-height: 1.2;
+      }
+    }
+
+    &-desc-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    // &-desc {
+      // font-size: 14px;
+    // }
+
+    &-tags {
+      display: flex;
+      flex-wrap: nowrap;
+      margin-left: auto;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    &-tag {
+      border-radius: 16px;
+      padding: 4px 8px;
+      margin: 0 8px;
+
+      @include app-theme(background-color, disabledContainer);
+    }
+
+    &.disabled {
+      opacity: 0.6;
     }
   }
 
-  &-short-title {
-    margin: auto;
-    text-align: center;
-    font-size: 24px;
-    letter-spacing: 1px;
-    line-height: 1.2;
+  &-empty-box {
+    width: $list-card-max-width;
   }
-  // &-link {
-  //   height: 100%;
-  //   width: 80px;
-  // }
-
-  // &-link-short-title {
-  //   margin: auto;
-  // }
 }
