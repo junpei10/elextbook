@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, NgZone, OnDestroy, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import {
+  ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding,
+  Inject, NgZone, OnDestroy, TemplateRef, ViewChild, ViewEncapsulation
+} from '@angular/core';
 import { noop } from '@material-lite/angular-cdk/utils';
 import { MlSlideToggleChange } from '@material-lite/angular/slide-toggle';
 import { Subscription } from 'rxjs';
 import { skip } from 'rxjs/operators';
 import { RootHeader } from 'src/app/root-header.service';
 import { RootMain } from 'src/app/root-main.service';
-import { Firestore, FIRESTORE } from 'src/app/service/firestore';
+import { Firestore, FIRESTORE } from 'src/app/service/firebase';
 import { Fragment } from 'src/app/service/fragment';
 import { ascIndexSort } from 'src/app/service/list-data-session';
 import { MediaQueryObserver } from 'src/app/service/media-query';
@@ -48,12 +51,15 @@ type Counter = {
   encapsulation: ViewEncapsulation.None
 })
 export class WorkbookGameComponent implements OnDestroy {
+  @HostBinding('class.hidden') hasHidden: boolean = true;
+
   @ViewChild('rootHeaderContent', {static: true})
   private set _onSetRootHeaderContent(templateRef: TemplateRef<any>){
     this._rootHeader.content = templateRef;
   }
 
-  hasLoaded: boolean;
+  isMp: boolean;
+  cannotStart: boolean;
 
   isPlaying: boolean;
   playingScreenClass: string;
@@ -80,16 +86,18 @@ export class WorkbookGameComponent implements OnDestroy {
   questionOrderIndexes: number[];
   questionLength: number;
 
+  mistakeQuestionIndexes: number[] = [];
+
   // ゲームで遊ばれているデータ
   currentQuestion: Question | null;
   currentAnsweredIndex: number | null;
   currentGameData: WorkbookData['games'][number] | null;
 
+  currentHeaderTheme: 'secondary' | 'warn' | null;
+
   // 初めは存在しない
   counter: Counter;
   shadeAnsweredCount: number;
-
-  mistakeQuestionIndexes: number[] = [];
 
   repeatedCount: number;
 
@@ -143,8 +151,11 @@ export class WorkbookGameComponent implements OnDestroy {
       dataGetter = firestore.collection('workbook-data').doc(path);
     }
 
-    this._mediaQueryChangesSubscription =
-      mediaQuery.store.changes.subscribe(changeDetectorRef.markForCheck.bind(changeDetectorRef));
+    this._mediaQueryChangesSubscription = mediaQuery.store.changes
+      .subscribe((state) => {
+        this.isMp = state === 'mp';
+        changeDetectorRef.markForCheck();
+      });
 
     ngZone.runOutsideAngular(() => {
       Promise.all([
@@ -155,8 +166,6 @@ export class WorkbookGameComponent implements OnDestroy {
 
         // すでに取得しているデータがあるということは "result[0] = null" であることが確定する。
         const workbookData = this.data || (this.data = result[0].data()) as WorkbookData;
-
-        this.hasLoaded = false;
 
         const gamesData = workbookData.games;
 
@@ -192,13 +201,15 @@ export class WorkbookGameComponent implements OnDestroy {
 
         _rootHeader.onMpWrapperClick = () => this.fragment.add('playing');
 
+        this.hasHidden = false;
+
         ngZone.run(() => changeDetectorRef.markForCheck());
       });
     });
 
-    this.fragment.remove();
+    fragment.remove();
 
-    this.fragmentSubscription = fragment.observe('playing', {
+    const subscription = this.fragmentSubscription = fragment.observe('playing', {
       onMatch: () => {
         if (this.data) {
           this._startGame();
@@ -206,12 +217,20 @@ export class WorkbookGameComponent implements OnDestroy {
         }
       },
       onEndMatching: () => {
-        this._getResults();
-        changeDetectorRef.markForCheck();
+        if (fragment.value !== 'opening-dialog') {
+          this._getResults();
+          changeDetectorRef.markForCheck();
+        }
       },
       pipeParams: [skip(1)]
     });
+
+    subscription.add(fragment.observe('opening-dialog', {
+      onMatch: () => this.hasOpenedDialog = true,
+      onEndMatching: () => this.hasOpenedDialog = false
+    }));
   }
+
 
   ngOnDestroy(): void {
     this._rootHeader.styling.setTheme(null);
@@ -225,12 +244,30 @@ export class WorkbookGameComponent implements OnDestroy {
     this.fragment.remove();
   }
 
-  startGame(replayOnlyMistakes?: boolean): void {
-    this._startGame = replayOnlyMistakes
-      ? this._replayOnlyMistakes.bind(this)
-      : this._playFromBeginning.bind(this);
+  startGame(type?: 'from-middle' | 'only-mistakes'): void {
+    this.fragment.remove();
+
+    this._startGame = !type
+      ? this._playFromBeginning.bind(this)
+      : type === 'from-middle'
+        ? this._playFromMiddle.bind(this)
+        : this._replayOnlyMistakes.bind(this);
 
     this.fragment.add('playing');
+  }
+
+  private _playFromMiddle(): void {
+    if (this.isPlaying) { return; }
+    this.isPlaying = true;
+
+    const rootHeader = this._rootHeader;
+    rootHeader.switchToolbarMode();
+    this._rootMain.hasHiddenMpNav = true;
+
+    const headerTheme = this.currentHeaderTheme;
+    headerTheme
+      ? this._rootHeader.styling.setTheme(headerTheme)
+      : this._nextQuestion();
   }
 
   private _playFromBeginning(): void {
@@ -258,6 +295,10 @@ export class WorkbookGameComponent implements OnDestroy {
   }
 
   private _initGame(): void {
+    this.currentQuestion = null;
+    this.currentAnsweredIndex = null;
+    this.currentGameData = null;
+
     const counter = this.counter = {
       total: {
         answered: 0, // <= nextQuestionを呼び出す際に、この値に１追加するため
@@ -303,25 +344,30 @@ export class WorkbookGameComponent implements OnDestroy {
       const counter = this.counter;
       counter.total.answered++;
 
+      const uniqueCounts = counter[this.currentGameData!.type];
+      uniqueCounts.answered++;
+
       if (correctAnswerIndex === answerIndex) {
         // 正解
         this.playBuzzer.correct();
 
         counter.total.corrected++;
-        counter[this.currentGameData!.type!].corrected++;
+        uniqueCounts.corrected++;
 
         entryPlayingScreenClass = 'answered correct';
         this._rootHeader.styling.setTheme('secondary');
+        this.currentHeaderTheme = 'secondary';
 
       } else {
         // 不正解
         this.playBuzzer.mistake();
 
         counter.total.mistaken++;
-        counter[this.currentGameData!.type!].mistaken++;
+        uniqueCounts.mistaken++;
 
         entryPlayingScreenClass = 'answered mistake';
         this._rootHeader.styling.setTheme('warn');
+        this.currentHeaderTheme = 'warn';
 
         const currIndex = this.questionOrderIndexes[counter.total.answered];
         this.mistakeQuestionIndexes.push(currIndex);
@@ -332,6 +378,7 @@ export class WorkbookGameComponent implements OnDestroy {
 
     } else {
       // 回答してあるとき
+      this.currentHeaderTheme = null;
 
       // 押されたボタンが答えのボタンか判別する
       if (correctAnswerIndex === answerIndex) {
@@ -382,7 +429,13 @@ export class WorkbookGameComponent implements OnDestroy {
       this._playFromBeginning();
 
     } else {
-      this._getResults();
+      this.fragment.remove();
+
+      setTimeout(() => {
+        this.currentQuestion = null;
+        this.currentAnsweredIndex = null;
+        this.currentGameData = null;
+      });
     }
   }
 
@@ -391,11 +444,6 @@ export class WorkbookGameComponent implements OnDestroy {
     this.isPlaying = false;
 
     this._startGame = this._playFromBeginning.bind(this);
-    this.fragment.remove();
-
-    this.currentQuestion = null;
-    this.currentAnsweredIndex = null;
-    this.currentGameData = null;
 
     const rootHeader = this._rootHeader;
     rootHeader.switchNormalMode();
@@ -452,11 +500,17 @@ export class WorkbookGameComponent implements OnDestroy {
     const localConfig = this.localConfig;
     this.localConfig[type].disabled = event.checked;
 
-    this.gameIdentifiers.every(id => localConfig[id[1]].disabled)
-      ? this._rootHeader.styling.setTheme('disabled')
-      : this.counter
+    if (this.gameIdentifiers.every(id => localConfig[id[1]].disabled)) {
+      this._rootHeader.styling.setTheme('disabled');
+      this.cannotStart = true;
+
+    } else {
+      this.counter
         ? this._rootHeader.styling.setTheme('accent')
         : this._rootHeader.styling.setTheme('primary');
+
+      this.cannotStart = false;
+    }
   }
 }
 
@@ -481,9 +535,11 @@ const noopBuzzer: PlayBuzzer = {
 
 /** [開始] playBuzzerへの代入処理 */
 let _buzzer = new Audio('../../../../assets/correct-buzzer.mp3');
+_buzzer.volume = 0.5;
 playBuzzer.correct = _buzzer.play.bind(_buzzer);
 
 _buzzer = new Audio('../../../../assets/mistake-buzzer.mp3');
+_buzzer.volume = 0.5;
 playBuzzer.mistake = _buzzer.play.bind(_buzzer);
 
 _buzzer = null!;

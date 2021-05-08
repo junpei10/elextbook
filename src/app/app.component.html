@@ -123,7 +123,7 @@
     </div>
   </button>
 
-  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.settings" routerLink="/settings" disabled>
+  <button mlButton class="root-nav-button" [theme]="routeNavSelectedRoute.settings" routerLink="/settings">
     <div class="root-nav-button-content">
       <svg class="root-nav-button-icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
         <g>
@@ -140,7 +140,7 @@
 </nav>
 
 <aside *ngIf="rootDrawer.isExisted" class="root-drawer-pane" [class.leave-to]="rootDrawer.leaveTo" (click)="fragment.remove()">
-  <section class="root-drawer-content" (click)="$event.stopPropagation()">
+  <section class="root-drawer-content" #rootDrawerContentRef (click)="$event.stopPropagation()">
     <ng-container *ngIf="mediaQueryStatus.isMp; then mpDrawer; else pcDrawer"></ng-container>
   </section>
 
@@ -166,7 +166,7 @@
       <button mlButton class="root-drawer-pc-button" routerLink="/textbook-list" [theme]="routeNavSelectedRoute.textbook" disabled>Textbook</button>
       <button mlButton class="root-drawer-pc-button" routerLink="/workbook-list" [theme]="routeNavSelectedRoute.workbook">Workbook</button>
       <button mlButton class="root-drawer-pc-button" routerLink="/library" [theme]="routeNavSelectedRoute.library" disabled>Library</button>
-      <button mlButton class="root-drawer-pc-button" routerLink="/settings" [theme]="routeNavSelectedRoute.settings" disabled>Settings</button>
+      <button mlButton class="root-drawer-pc-button" routerLink="/settings" [theme]="routeNavSelectedRoute.settings">Settings</button>
     </div>
   </ng-template>
 </aside>

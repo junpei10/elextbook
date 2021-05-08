@@ -1,13 +1,12 @@
 import {
-  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Inject,
+  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Inject,
   NgZone, OnDestroy, TemplateRef, ViewChild, ViewEncapsulation
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { noop } from '@material-lite/angular-cdk/utils';
 import { unigramFactory } from 'src/app/common/ngram-factory';
 import { RootHeader } from 'src/app/root-header.service';
-import { RootMain } from 'src/app/root-main.service';
-import { Firestore, FIRESTORE } from 'src/app/service/firestore';
+import { Firestore, FIRESTORE } from 'src/app/service/firebase';
 import { Fragment } from 'src/app/service/fragment';
 import { ListDataSession } from 'src/app/service/list-data-session';
 import { WorkbookData, WORKBOOK_CURRENT_DATA } from '../workbook';
@@ -20,6 +19,8 @@ import { WorkbookData, WORKBOOK_CURRENT_DATA } from '../workbook';
   encapsulation: ViewEncapsulation.None
 })
 export class WorkbookListComponent implements AfterViewInit, OnDestroy {
+  @HostBinding('class.hidden') hasHidden: boolean = true;
+
   @ViewChild('rootHeaderContent', { static: true })
   set setRootHeaderContent(templateRef: TemplateRef<any>) {
     this._rootHeader.content = templateRef;
@@ -45,17 +46,15 @@ export class WorkbookListComponent implements AfterViewInit, OnDestroy {
     public router: Router,
     private _rootHeader: RootHeader,
     private _fragment: Fragment,
+    private _changeDetection: ChangeDetectorRef,
     ngZone: NgZone,
-    _changeDetection: ChangeDetectorRef,
-    @Inject(FIRESTORE) _firestore: Firestore,
+    @Inject(FIRESTORE) firestore: Firestore,
   ) {
     const session = this.listDataSession =
-      new ListDataSession('workbook-data', _firestore, ngZone, _changeDetection);
+      new ListDataSession('workbook-data', firestore, ngZone, _changeDetection);
 
-    session.getAllListData();
-      // .then(() => {
-      //   rootChangeDetector.ref.markForCheck();
-      // });
+    session.getAllListData()
+      .then(this.onGetListData.bind(this));
 
     _rootHeader.switchNormalMode();
 
@@ -94,9 +93,18 @@ export class WorkbookListComponent implements AfterViewInit, OnDestroy {
     const val = event.target.value as string;
     const words = this.searchWords = unigramFactory(val);
 
-    words[0]
+    this.hasHidden = true;
+
+    const promise = words[0]
       ? this.listDataSession.getSearchedListData(words)
       : this.listDataSession.getAllListData();
+
+    promise.then(this.onGetListData.bind(this));
+  }
+
+  onGetListData(): void {
+    this.hasHidden = false;
+    this._changeDetection.markForCheck();
   }
 
   focusInput(): void {

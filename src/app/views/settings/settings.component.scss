@@ -1,0 +1,11 @@
+@import '../../service/media-query/_media-query.sass';
+
+app-settings {
+  display: flex !important;
+  box-sizing: border-box;
+  padding: 32px;
+
+  @include mp {
+    padding: 16px 0;
+  }
+}

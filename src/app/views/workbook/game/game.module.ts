@@ -6,10 +6,12 @@ import { MlRippleModule } from '@material-lite/angular/core';
 import { MlSlideToggleModule } from '@material-lite/angular/slide-toggle';
 import { WorkbookGameRoutingModule } from './game-routing.module';
 import { WorkbookGameComponent } from './game.component';
+import { RoundingPipe } from './rounding.pipe';
 
 @NgModule({
   declarations: [
-    WorkbookGameComponent
+    WorkbookGameComponent,
+    RoundingPipe
   ],
   imports: [
     CommonModule,

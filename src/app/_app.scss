@@ -6,11 +6,20 @@ $app-light-palette:
     accent: (
       color: #009688,
       contrast: #fff
+    ),
+    secondary: (
+      color: #8BC34A,
+      contrast: #fff
     )
   ), deepPurple-amber);
 
 $app-dark-theme: ml-template-theme(dark);
-$app-dark-palette: ml-template-palette(deepPurple-amber);
+$app-dark-palette: ml-create-palette((
+    secondary: (
+      color: #8BC34A,
+      contrast: #fff
+    )
+  ), deepPurple-amber);
 
 
 @mixin app-theme($prop, $arg, $opacity: null) {
@@ -43,9 +52,13 @@ $app-dark-palette: ml-template-palette(deepPurple-amber);
   }
 }
 
-@mixin app-border($prop: 1px solid) {
-  border: $prop map-get($app-light-theme, divider);
-  .dark-theme & { border: $prop map-get($app-dark-theme, divider); }
+@mixin app-border($prop: border, $style: 1px solid) {
+  #{$prop}: $style map-get($app-light-theme, divider);
+  .dark-theme & { #{$prop}: $style map-get($app-dark-theme, divider); }
+}
+@mixin app-border-color() {
+  border-color: map-get($app-light-theme, divider);
+  .dark-theme & { border-color: map-get($app-dark-theme, divider); }
 }
 
 @mixin app-card($z-index: 2, $radius: 4px) {

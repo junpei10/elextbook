@@ -3,6 +3,8 @@ import { Route, RouterModule } from '@angular/router';
 import { AppMetaData } from './app-meta.service';
 import { HomeComponent } from './views/home/home.component';
 import { NotFoundComponent } from './views/not-found/not-found.component';
+import { SignInComponent } from './views/sign-in/sign-in.component';
+import { SignUpComponent } from './views/sign-up/sign-up.component';
 
 export interface AppRouteData extends AppMetaData {
   key: string;
@@ -41,6 +43,33 @@ const routes: AppRoutes = [
     data: {
       key: 'workbook-list',
       title: 'Workbook',
+      parentKeys: []
+    }
+  },
+  {
+    path: 'settings',
+    loadChildren: () => import('./views/settings').then((m) => m.SettingsModule),
+    data: {
+      key: 'settings',
+      title: 'Settings',
+      parentKeys: []
+    }
+  },
+  {
+    path: 'sign-in',
+    loadChildren: () => import('./views/sign-in').then((m) => m.SignInModule),
+    data: {
+      key: 'sign-in',
+      title: 'Sign In',
+      parentKeys: []
+    }
+  },
+  {
+    path: 'sign-up',
+    loadChildren: () => import('./views/sign-up').then((m) => m.SignUpModule),
+    data: {
+      key: 'sign-up',
+      title: 'Sign Up',
       parentKeys: []
     }
   },

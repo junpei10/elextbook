@@ -5,6 +5,11 @@ app-workbook-game {
   display: block;
   height: 100%;
   position: relative;
+  transition: ml-opacity-transition();
+
+  &.hidden {
+    opacity: 0;
+  }
 }
 
 .workbook-header-container {
@@ -25,12 +30,13 @@ app-workbook-game {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: 600;
+    font-weight: 500;
     text-align: center;
     line-height: 1.2;
 
     &-heading {
       flex: 1;
+      white-space: nowrap;
     }
   }
 
@@ -60,27 +66,46 @@ app-workbook-game {
   }
 }
 
-
-.workbook-text-content {
-  height: 100%;
+.workbook-mp-table {
+  border-collapse: collapse;
+  text-align: center;
   width: 100%;
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  z-index: 1;
-
-  &.title {
-    div {
-      width: 100%;
-    }
+  margin-bottom: 24px;
+  &:last-child {
+    margin-bottom: 0;
   }
 
-  &.answer {
-    justify-content: center;
+  th {
+    @include app-border(border-bottom);
+    padding-bottom: 16px;
   }
 
+  .heading {
+    width: 50%;
+    padding: 16px 0;
+  }
+}
+
+.workbook-pc-table {
+  border-collapse: collapse;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 32px;
+
+  th {
+    width: 25%;
+    font-weight: 500;
+    padding: 8px 0;
+    // @include app-border(border-right);
+  }
+
+  tr {
+    @include app-border(border-bottom);
+  }
+}
+
+.workbook-typography {
   .bold {
     font-weight: bold;
   }
@@ -121,11 +146,7 @@ app-workbook-game {
   }
 
   div {
-    margin-bottom: 4px;
-
-    @include pc {
-      margin-bottom: 8px;
-    }
+    margin-bottom: 8px;
   }
 
   img {
@@ -138,8 +159,12 @@ app-workbook-game {
     min-height: 0;
 
     max-width: 100%;
+    min-width: 0;
 
     margin: 0 auto;
+
+    object-fit: cover;
+    object-position: center;
 
     border-radius: 8px;
 
@@ -158,6 +183,8 @@ app-workbook-game {
 
     img {
       margin: 0 4px;
+      min-height: 0;
+      min-width: 0;
       box-shadow: 0 0 0 0 transparent;
     }
   }
@@ -182,7 +209,6 @@ app-workbook-game {
   justify-content: center;
 
   width: 100%;
-  max-width: 960px;
 
   box-sizing: border-box;
   padding: 16px 8px 160px;
@@ -207,111 +233,30 @@ app-workbook-game {
   &-container { // 共通
     display: flex;
     flex-direction: column;
+    margin: 0 auto 32px;
 
-    margin-bottom: 32px;
+    width: 100%;
+    max-width: 960px;
 
     @include mp {
       @include app-card();
       box-sizing: border-box;
+      margin-bottom: 36px;
       padding: 16px;
       width: 100%;
 
       &:empty {
         display: none;
       }
+
+      &.settings-container {
+        padding: 16px 0;
+      }
     }
   }
 
   &-action-button {
     height: 48px;
-  }
-
-  // &-config-container {
-  //   display: flex;
-  //   flex-direction: column;
-
-  //   @include mp {
-  //     @include app-card();
-  //   }
-  // }
-
-  &-config {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    .ml-slide-toggle {
-      height: 100%;
-      width: 100%;
-    }
-
-    .ml-slide-toggle-bar {
-      order: 1;
-      margin: 0 8px;
-
-      @include pc {
-        order: 0;
-        margin: 8px 24px 0 0;
-      }
-    }
-    .ml-slide-toggle-content {
-      margin: 0 8px;
-    }
-
-    .ml-slide-toggle-label {
-      box-sizing: border-box;
-
-      padding: 8px 0;
-
-      width: 100%;
-      justify-content: space-between;
-
-      @include pc {
-        align-items: initial;
-        justify-content: start;
-      }
-    }
-
-    &-heading { // PC優先
-      font-size: 16px;
-      margin: 8px 0 8px 0;
-      white-space: nowrap;
-      min-width: 240px;
-      font-weight: 500;
-
-      @include mp {
-        margin-top: 0;
-        font-size: 14px;
-        @include app-theme(color, hintText);
-        font-weight: bold;
-      }
-    }
-
-    &-title {
-      font-weight: 500;
-    }
-
-    &-desc {
-      // margin-left: 52px;
-      // margin: 4px 0 16px 52px;
-      font-size: 14px;
-      display: block;
-      white-space: initial;
-    }
-
-    &-form {
-      width: 100%;
-      @include pc {
-        width: auto;
-      }
-
-      display: flex;
-      flex-direction: column;
-    }
   }
 }
 
@@ -329,12 +274,8 @@ app-workbook-game {
 
   position: fixed;
   top: 0;
-  
-  height: 100vh;
-  height: -webkit-fill-available;
 
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+  height: 100%;
 
   width: 100%;
 
@@ -358,13 +299,27 @@ app-workbook-game {
   }
 
   // title: container => content
-  &-title-container {
+  &-title-content {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    height: auto; // <= For firefox
+    height: fit-content;
+
     min-height: 35%;
     max-height: 50%;
 
     flex-shrink: 1;
-    padding: 8px;
+    padding: 16px;
+    // padding: 8px;
     box-sizing: border-box;
+
+    img {
+      margin-top: 4px;
+      min-height: 160px;
+      min-width: 160px;
+    }
 
     @include pc {
       padding: 16px;
@@ -378,18 +333,13 @@ app-workbook-game {
 
   &-answer-container {
     position: relative;
+    height: auto;
+    height: fit-content;
 
     min-height: 50%;
     max-height: 65%;
 
     flex-shrink: 0;
-
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "div div"
-      "div div";
 
     @include pc {
       min-height: 100%;
@@ -398,10 +348,18 @@ app-workbook-game {
     }
   }
 
-  // &-title {}
-
-  &-answer-card {
+  &-answers {
     height: 100%;
+
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "div div"
+      "div div";
+  }
+
+  &-answer {
     box-sizing: border-box;
     padding: 8px;
 
@@ -410,6 +368,16 @@ app-workbook-game {
 
     .answered & {
       pointer-events: none;
+    }
+
+    &-content {
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
   }
 
@@ -498,38 +466,21 @@ app-workbook-game {
 
   $mp-padding-top: 48px;
 
-  &-header {
-    position: absolute;
-    top: 0;
-    padding-top: $mp-padding-top;
-    z-index: 2;
-
-    opacity: 0;
-    transition: ml-opacity-transition(very-fast, standard);
-
-    .opening & {
-      opacity: 1;
-    }
-
-    @include pc {
-      padding: 80px 0 0 80px;
-      .ml-icon {
-        height: 48px;
-        width: 48px;
-      }
-    }
-  }
-
   &-content {
-    position: absolute;
     overflow-y: auto;
+    position: absolute;
     top: 0;
+
+    height: 100%;
+
     display: flex;
+    justify-content: center;
+
     box-sizing: border-box;
     padding: $mp-padding-top 8px 8px;
 
     opacity: 0;
-    transition: ml-opacity-transition(very-fast, standard);
+    transition: opacity 160ms map-get($ml-animation-function, angular);
 
     @include app-theme(background-color, primaryContainer);
 
@@ -544,6 +495,8 @@ app-workbook-game {
 
   img {
     display: block;
+
+    height: auto;
     max-height: 100%;
     min-height: 0;
 

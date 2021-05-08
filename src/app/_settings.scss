@@ -1,0 +1,109 @@
+@import './app';
+@import './service/media-query/_media-query.sass';
+
+
+.settings {
+  &-container {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+
+    margin: 0 auto;
+
+    width: 100%;
+    max-width: 960px;
+
+    @include pc {
+      width: auto !important;
+    }
+  }
+
+  &-content {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .ml-slide-toggle {
+      height: 100%;
+      width: 100%;
+    }
+
+    .ml-slide-toggle-bar {
+      order: 1;
+      margin: 0 8px;
+
+      @include pc {
+        order: 0;
+        margin: 4px 24px 0 0;
+      }
+    }
+    .ml-slide-toggle-content {
+      margin: 0 8px;
+    }
+
+    .ml-slide-toggle-label {
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+
+      box-sizing: border-box;
+      padding: 8px 16px;
+
+      @include pc {
+        justify-content: start;
+        align-items: baseline;
+      }
+    }
+
+    .ml-button {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 0 32px 0;
+      border-radius: 0;
+    }
+  }
+
+  &-heading {
+    min-width: 280px;
+    margin: 8px 0 8px 16px;
+
+    font-size: 16px;
+    font-weight: 500;
+
+    @include mp {
+      @include app-theme(color, hintText);
+
+      min-width: 0;
+      margin: 0 0 4px 16px;
+
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
+
+  &-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    @include pc {
+      flex: 1;
+      width: auto;
+    }
+
+    &-title {
+      font-weight: 500;
+    }
+
+    &-desc {
+      @include app-theme(color, hintText);
+      font-size: 14px;
+      display: block;
+      white-space: initial;
+    }
+  }
+}

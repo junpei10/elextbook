@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, NgZone } from '@angular/core';
-import { Firestore } from '../firestore';
+import { Firestore } from '../firebase';
 
 export interface ListData {
   index: number;
@@ -41,6 +41,7 @@ export class ListDataSession<D extends ListData> {
     this.notMatched = false;
     this.value = {};
     this.categories = [];
+    this._changeDetector.markForCheck();
   }
 
   private _finalize(): void {
@@ -67,9 +68,7 @@ export class ListDataSession<D extends ListData> {
             this.notMatched = true;
 
           } else {
-            result.forEach((value) => {
-              this.distributeData(value.data() as any);
-            });
+            result.forEach((value) => this.distributeData(value.data() as any));
           }
         })
         .then(() => this._finalize());

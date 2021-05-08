@@ -1,5 +1,5 @@
 <section class="workbook-list-section" *ngFor="let category of listDataSession.categories">
-  <h1 class="workbook-list-category">{{ category }}</h1>
+  <h1 class="workbook-list-category ml-hint">{{ category }}</h1>
   <div class="workbook-list-cards">
     <div
       mlRipple
@@ -13,7 +13,7 @@
       </div>
       <div class="workbook-list-card-bottom">
         <div class="workbook-list-card-thumbnail" [style.background-color]="data.theme">
-          <h2 class="workbook-list-card-thumbnail-content" [innerHTML]="data.thumbnail"></h2>
+          <h3 class="workbook-list-card-thumbnail-content" [innerHTML]="data.thumbnail"></h3>
         </div>
         <div class="workbook-list-card-desc-container ml-hint">
           <span class="workbook-list-card-desc">{{ data.desc }}</span>

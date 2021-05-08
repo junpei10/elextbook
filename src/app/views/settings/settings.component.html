@@ -1,0 +1,28 @@
+<section class="settings-container">
+  <div class="settings-content">
+    <h2 class="settings-heading">テーマ</h2>
+    <div class="settings-form">
+      <ml-slide-toggle theme="accent">
+        <span class="settings-form-title">ダークテーマの使用</span>
+      </ml-slide-toggle>
+    </div>
+  </div>
+
+  <div class="settings-content">
+    <h2 class="settings-heading">ユーザー</h2>
+    <div class="settings-form">
+      <ng-template [ngIf]="true" [ngIfThen]="login" [ngIfElse]="logout"></ng-template>
+
+      <ng-template #login>
+        <button mlButton routerLink="/sign-in">ログイン</button>
+      </ng-template>
+
+      <ng-template #logout>
+        <button mlButton>アカウント情報</button>
+        <button mlButton>ログアウト</button>
+      </ng-template>
+
+      <button mlButton routerLink="/sign-up">アカウントの作成</button>
+    </div>
+  </div>
+</section>

@@ -177,6 +177,11 @@ $pc-offset-top: 64px;
     span {
       display: block;
     }
+
+    &-title {
+      width: 144px;
+      display: inline-block;
+    }
   }
 
   &-img {

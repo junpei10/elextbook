@@ -11,7 +11,7 @@ export interface WorkbookData extends ListData {
   games: {
     type: string,
     index: number,
-    name?: string,
+    name: string,
     buttonToOpenDialog?: string;
     dialogContent?: string;
   }[];

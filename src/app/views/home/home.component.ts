@@ -10,8 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const _isPwa =
   matchMedia('(display-mode: standalone)').matches // @ts-ignore
-  || !!navigator.standalone as boolean;
-
+  || navigator.standalone as boolean;
 
 const _beforeInstallPromptSupported: boolean = (() => {
   const _navigator = navigator;
@@ -54,8 +53,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   installButtonIsDisabled: boolean;
 
   constructor(
-    public fragment: Fragment,
     rootHeader: RootHeader,
+    public fragment: Fragment,
     private _changeDetector: ChangeDetectorRef
   ) {
     rootHeader.setDefaultContent();

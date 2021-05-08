@@ -1,6 +1,7 @@
 @import '@material-lite/angular/theming';
 @import './service/media-query/_media-query.sass';
 @import './app';
+@import './settings';
 
 // Mobile first
 // 極力 `@include mp` は使わないように
@@ -42,13 +43,14 @@ $pc-nav-elevation-level: 4;
 
     .ml-disabled & {
       pointer-events: none;
-      @include app-theme(background-color, disabledContainer);
+      background-color: #BDBDBD;
       @include app-theme(color, disabledText);
     }
 
     .ml-secondary & {
-      background-color: #8BC34A;
-      color: white;
+      $palette: map-get($app-light-palette, secondary);
+      background-color: map-get($palette, color);
+      color: map-get($palette, contrast);
     }
 
     .ml-warn & {
@@ -124,7 +126,7 @@ $pc-nav-elevation-level: 4;
     // toolbar とかの高さは上のほうで記入済み
   }
 
-  // -contents
+  // - contents
   //   - left -> center -> right => wrapper
 
   &-contents {
@@ -210,7 +212,7 @@ $pc-nav-elevation-level: 4;
     position: absolute;
     width: 24px; height: 24px;
     opacity: 0;
-    transform: rotate(-180deg);
+    transform: rotate(-90deg);
     transition-property: opacity, transform;
     transition-duration: map-get($ml-animation-duration, slow);
     transition-timing-function: map-get($ml-animation-function, angular);
@@ -231,6 +233,14 @@ $pc-nav-elevation-level: 4;
 .root-main {
   position: relative;
   box-sizing: border-box;
+
+  > * {
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 
   @include pc {
     padding-left: $pc-nav-width;
@@ -358,25 +368,6 @@ $pc-nav-elevation-level: 4;
   }
 }
 
-@keyframes enterRootDrawerContentAnimation {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes leaveRootDrawerContentAnimation {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-// $root-drawer-width: 48px;
 .root-drawer {
   &-pane {
     position: fixed;
@@ -420,13 +411,7 @@ $pc-nav-elevation-level: 4;
     @include app-theme(background-color, primaryContainer);
 
     transform: translateX(-100%);
-
-    animation: ml-create-transition(enterRootDrawerContentAnimation, slow, angular);
-    animation-fill-mode: forwards;
-
-    .leave-to & {
-      animation: ml-create-transition(leaveRootDrawerContentAnimation, slow, angular);
-    }
+    transition: ml-create-transition(transform, slow, angular);
   }
 
   &-pc {

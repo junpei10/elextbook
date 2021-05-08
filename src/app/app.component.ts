@@ -14,10 +14,12 @@ import { rootChangeDetector } from './root-change-detector-ref';
 import { RootDrawer } from './root-drawer.service';
 import { RootHeader } from './root-header.service';
 import { RootMain } from './root-main.service';
+import { FirebaseAuth, FIREBASE_AUTH } from './service/firebase';
 import { Fragment } from './service/fragment';
 import { MediaQueryObserver } from './service/media-query';
 import { RouteChanges, ROUTE_CHANGES } from './service/route-observer';
 import { YoungestRoute } from './service/youngest-route';
+import { LOCAL_USER, USER } from './user';
 
 @Component({
   selector: 'app-root',
@@ -27,12 +29,12 @@ import { YoungestRoute } from './service/youngest-route';
   encapsulation: ViewEncapsulation.None,
   animations: [
     trigger('routeAnimation', [
-      transition('home => *, workbook-list => *, workbook-game => *',
+      transition('home => *, workbook-list => *, workbook-game => *, settings => *, sign-in => *, sign-up => *',
         sequence([
-          query(':enter', style({ position: 'absolute', pointerEvents: 'none', width: '100%', opacity: 0, top: 0, left: 0 })),
+          query(':enter', style({ position: 'absolute', pointerEvents: 'none', opacity: 0, })),
 
           query(':leave', [
-            style({  opacity: 1, width: '100%', top: 0, left: 0 }),
+            style({  opacity: 1 }),
             animate('160ms cubic-bezier(0.25, 0.8, 0.25, 1)', style({ opacity: 0 })),
           ], { optional: true }),
 
@@ -53,6 +55,10 @@ import { YoungestRoute } from './service/youngest-route';
 export class AppComponent implements DoCheck {
   @ViewChild('rootHeaderRef') set setRootHeader(elementRef: ElementRef<HTMLElement>) {
     this.rootHeader.styling.setHeaderElement(elementRef);
+  }
+  @ViewChild('rootDrawerContentRef') set setRootDrawerContent(elementRef: ElementRef<HTMLElement>) {
+    // @ts-expect-error: Assign to the readonly variable
+    this.rootDrawer.contentElementRef = elementRef;
   }
 
   title = 'elextbook';
@@ -105,9 +111,10 @@ export class AppComponent implements DoCheck {
     public rootHeader: RootHeader,
     public rootDrawer: RootDrawer,
     public rootMain: RootMain,
-    private _router: Router,
-    @Inject(RUN_OUTSIDE_NG_ZONE) runOutsideNgZone: RunOutsideNgZone,
     @Inject(DOCUMENT) private _document: Document,
+    @Inject(FIREBASE_AUTH) private _firebaseAuth: FirebaseAuth,
+    _router: Router,
+    @Inject(RUN_OUTSIDE_NG_ZONE) runOutsideNgZone: RunOutsideNgZone,
     mlTheming: MlTheming,
     changeDetector: ChangeDetectorRef,
     appMeta: AppMeta,
@@ -126,9 +133,21 @@ export class AppComponent implements DoCheck {
         accent: {
           color: '#009688',
           contrast: '#fff'
+        },
+        secondary: {
+          color: '#8BC34A',
+          contrast: '#fff'
         }
       }},
-      { theme: ML_DARK_THEME, palette: ML_DEEPPURPLE_AMBER_PALETTE, wrapperClass: 'dark-theme' }
+      { theme: ML_DARK_THEME, palette: {
+          ...ML_DEEPPURPLE_AMBER_PALETTE,
+          secondary: {
+            color: '#8BC34A',
+            contrast: '#fff'
+          }
+        },
+        wrapperClass: 'dark-theme'
+      }
     ]);
 
     mediaQuery.observe('(min-width: 1025px)');
@@ -160,7 +179,7 @@ export class AppComponent implements DoCheck {
     });
 
     routeChanges.subscribe(() => {
-      runOutsideNgZone(() => setTimeout(() => scrollTo({ top: 0 }), 160));
+      runOutsideNgZone(() => setTimeout(() => scrollTo({top: 0}), 160));
       this.lazyLoading = false;
 
       const data = youngestRoute.state.data;
@@ -216,13 +235,19 @@ export class AppComponent implements DoCheck {
   }
 
   toggleDarkTheme(): void {
-    if (this.isDarkTheme) {
+    // @ts-ignore
+    const user: USER
+      = this._firebaseAuth.currentUser || LOCAL_USER;
+
+    const config = user.config;
+
+    if (config.darkTheme) {
       this._document.body.classList.remove('dark-theme');
-      this.isDarkTheme = false;
+      config.darkTheme = false;
 
     } else {
       this._document.body.classList.add('dark-theme');
-      this.isDarkTheme = true;
+      config.darkTheme = true;
     }
   }
 }
